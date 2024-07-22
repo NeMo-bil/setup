@@ -1,0 +1,19 @@
+grafana:
+  enabled: true
+
+postgis:
+  primary:
+    persistence:
+      enabled: false
+  readReplicas:
+    persistence:
+      enabled: false
+
+scorpio:
+  ingress:
+    enabled: true
+    # only to make it available for the test initialization
+    hosts:
+      - host: context-broker.127.0.0.1.nip.io
+        paths:
+          - "/"

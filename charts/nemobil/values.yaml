@@ -1,0 +1,150 @@
+# -- configuration to be shared between the context-broker components
+contextBroker:
+  generatePasswords:
+    # -- should a password for the database connection of context-broker components be generated in the cluster
+    enabled: true
+    #-- name of the secret to put the generated password into
+    secretName: context-broker-secret
+
+contextFile:
+  # -- should it be enabled? set to false if one outside the chart is used.
+  enabled: true
+  context: |
+    {
+        "@context": {
+            "type": "@type",
+            "id": "@id",
+            "nemobil": "https://github.com/nemobil/local-setup/model",
+            "Vehicle": "nemobil:Vehicle",
+            "description": "nemobil:description"
+        }
+    }
+  
+
+# -- configuration for the postgresql to be deployed as part of the context-broker, see https://github.com/bitnami/charts/tree/main/bitnami/postgresql for all options
+postgis:
+  # -- should it be enabled? set to false if one outside the chart is used.
+  enabled: true
+  # -- overrides the generated name, provides stable service names - this should be avoided if multiple instances are available in the same namespace
+  fullnameOverride: context-broker-postgis
+  # -- overrides the generated name, provides stable service names - this should be avoided if multiple instances are available in the same namespace
+  nameOverride: context-broker-postgis
+  ## auth configuration for the database
+  auth:
+    existingSecret: context-broker-secret
+    secretKeys:
+      adminPasswordKey: postgres-admin-password
+      userPasswordKey: postgres-user-password
+  ## configuration of the postgres primary replicas
+  primary:
+    ## provide db initialization
+    initdb:
+      ## provide scripts for initialization
+      scripts:
+        # -- enable the postgis extension and create the database as expected by scorpio
+        enable.sh: |
+          psql postgresql://postgres:${POSTGRES_PASSWORD}@localhost:5432 -c "CREATE EXTENSION postgis;"
+          psql postgresql://postgres:${POSTGRES_PASSWORD}@localhost:5432 -c "CREATE DATABASE ngb;"
+
+## configuration of the context-broker - see https://github.com/FIWARE/helm-charts/tree/main/charts/scorpio-broker-aaio for details
+scorpio:
+  fullnameOverride: context-broker-scorpio
+  # -- should scorpio be enabled
+  enabled: true
+  ## configuration of the image to be used
+  image:
+    # -- repository to be used - resource friendly all-in-one-runner without kafka
+    repository: scorpiobroker/all-in-one-runner
+    # -- tag of the image to be used - latest java image without kafka
+    tag: java-4.1.11
+  ## configuration of the database to be used by broker
+  db:
+    # -- host of the db
+    dbhost: context-broker-postgis
+    # -- username to be used
+    user: postgres
+    existingSecret:
+      enabled: true
+      name: context-broker-secret
+      key: postgres-admin-password
+  ## configuration of the readiness probe
+  readinessProbe:
+    # -- path to be used for the readiness probe, older versions used /actuator/health
+    path: /q/health
+  ## configuration of the liveness probe
+  livenessProbe:
+    # -- path to be used for the readiness probe, older versions used /actuator/health
+    path: /q/health
+  ## configuration to be used for the service offered by scorpio
+  service:
+    # -- ClusterIP is the recommended type for most clusters
+    type: ClusterIP
+
+
+
+grafana:
+  enabled: true
+  ingress:
+    enabled: true
+    hosts:
+      - grafana.127.0.0.1.nip.io
+  testFramework:
+    enabled: false
+  generatePasswords:
+    # -- should a password for the admin user be generated in the cluster
+    enabled: true
+    #-- name of the secret to put the generated password into
+    secretName: grafana-secret
+  #admin:
+  #  existingSecret: grafana-secret
+  env:
+    GF_AUTH_ANONYMOUS_ENABLED: true
+    GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+    GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: ngsild-grafana-datasource
+  extraEmptyDirMounts:
+    - name: plugins
+      mountPath: /var/lib/grafana/plugins
+
+
+  extraInitContainers:
+    - name: init-plugin
+      image: busybox:1.36
+      command:
+        - 'sh'
+        - '-c'
+        - "cd /var/lib/grafana/plugins ; wget --no-check-certificate -O ngsild-datasource.tgz https://github.com/bfi-de/ngsild-grafana-datasource/releases/download/v1.0.0/ngsild-grafana-datasource-1.0.0.tgz ; tar xvf ngsild-datasource.tgz -C /var/lib/grafana/plugins/"
+      volumeMounts:
+        - mountPath: /var/lib/grafana/plugins
+          name: plugins
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: NGSI-LD
+          version: 1
+          orgId: 1
+          uid: ngsild_1
+          type: ngsild-grafana-datasource
+          typeLogoUrl: public/plugins/ngsild-grafana-datasource/img/logo.svg
+          # proxy or direct
+          access: proxy
+          url: context-broker-scorpio:9090
+          # <string> database user, if used
+          user:
+          # <string> database name, if used
+          database:
+          basicAuth: false
+          basicAuthUser: dummy
+          withCredentials: false
+          isDefault: true
+          jsonData:
+            contextUrl: context-file:9000/context-file/ngsild-context.jsonld
+            timeseriesUrl: context-broker-scorpio:9090
+            tlsAuth: false
+            tlsAuthWithCACert: false
+            tlsSkipVerify: false
+            httpMode: POST
+            httpHeaderName1: 'Access-Token'
+            flavour: scorpio
+          secureJsonData: {}
+          editable: true
