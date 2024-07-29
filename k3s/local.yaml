@@ -10,6 +10,8 @@ postgis:
       enabled: false
 
 scorpio:
+  logging:
+    level: TRACE
   ingress:
     enabled: true
     # only to make it available for the test initialization
@@ -17,3 +19,86 @@ scorpio:
       - host: context-broker.127.0.0.1.nip.io
         paths:
           - "/"
+
+importData:
+  enabled: true
+  contextBroker: context-broker.127.0.0.1.nip.io:8080
+  data: |-
+    [
+      {
+        "id": "urn:ngsi-ld:vehicle:someCab",
+        "type": "Vehicle",
+        "description": {
+          "type": "Property",
+          "value": "Some cab"
+        },
+        "location": {
+          "type": "GeoProperty",
+          "value": {
+            "type": "Point",
+            "coordinates": [
+              10.890079039102002,
+              48.0540141182173
+            ]
+          }
+        }
+      }
+    ]
+
+reisewitz:
+  enabled: false
+  ingress:
+    enabled: true
+    hosts:
+      - host: reisewitz.127.0.0.1.nip.io
+        paths:
+          - path: /
+            pathType: Prefix
+  mappings:
+    test.json: |
+      {
+        "request": {
+          "urlPath": "/notification/booking",
+          "method": "POST",
+          "headers": {
+              "Content-Type": {
+                "equalTo": "application/json"
+              }
+          }
+        },
+        "response": {
+          "status": 200
+        },
+        "serveEventListeners": [
+          {
+            "name": "webhook",
+            "parameters": {
+              "method": "POST",
+              "url": "http://context-broker.127.0.0.1.nip.io:8080/ngsi-ld/v1/entityOperations/create",
+              "headers": {
+                "Content-Type": "application/json",
+                "Link": "<http://context-file:9000/context-file/ngsild-context.jsonld>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\""
+              },
+              "body": "[{\"id\": \"urn:ngsi-ld:vehicle:someCab2\",\"type\": \"Vehicle\",\"description\": {\"type\": \"Property\",\"value\": \"Some cab2\"},\"location\": {\"type\": \"GeoProperty\",\"value\": {\"type\": \"Point\",\"coordinates\": [10.890079039123002,48.0540141182173]}}}]"
+            }
+          }
+        ]
+      }
+
+rw-booking-subscription:
+  enabled: true
+  subscription: |
+    {
+      "description": "Notify me of booking changes",
+      "type": "Subscription",
+      "entities": [{"type": "BookingRequest"}],
+      "notification": {
+        "attributes": ["id", "state"],
+        "format": "keyValues",
+        "endpoint": {
+          "uri": "http://reisewitz.127.0.0.1.nip.io/notification/booking",
+          "accept": "application/json"
+        }
+      },
+      "@context": "http://context-file:9000/context-file/ngsild-context.jsonld"
+    }

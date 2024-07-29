@@ -45,6 +45,9 @@ metadata:
 data:
   ngsild-context.jsonld: |-
     {{ .Values.contextFile.context | nindent 4 }}
+  {{- with .Values.contextFile.model }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
 ---
 apiVersion: v1
 kind: Service

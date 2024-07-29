@@ -14,11 +14,32 @@ contextFile:
         "@context": {
             "type": "@type",
             "id": "@id",
-            "nemobil": "https://github.com/nemobil/local-setup/model",
+            "nemobil": "http://context-file:9000/context-file/",
             "Vehicle": "nemobil:Vehicle",
             "description": "nemobil:description"
         }
     }
+  model:
+    Vehicle.json: |
+      {
+          "$schema": "http://json-schema.org/schema#",
+          "$schemaVersion": "2020-12",
+          "$id": "http://context-file:9000/context-file/Vehicle.json",
+          "title": "Vehicle",
+          "description": "Model for a Vehicle.",
+          "type": "object",
+          "x-ngsi": {
+            "uri-prefix": "http://context-file:9000/context-file/"
+          },
+          "properties": {
+            "id": { "type": "string"},
+            "type": { "type": "string"}
+          },
+          "required": [
+            "id",
+            "type"
+          ]      
+      }
   
 
 # -- configuration for the postgresql to be deployed as part of the context-broker, see https://github.com/bitnami/charts/tree/main/bitnami/postgresql for all options
@@ -56,7 +77,7 @@ scorpio:
     # -- repository to be used - resource friendly all-in-one-runner without kafka
     repository: scorpiobroker/all-in-one-runner
     # -- tag of the image to be used - latest java image without kafka
-    tag: java-4.1.11
+    tag: java-4.1.15
   ## configuration of the database to be used by broker
   db:
     # -- host of the db
@@ -80,7 +101,10 @@ scorpio:
     # -- ClusterIP is the recommended type for most clusters
     type: ClusterIP
 
-
+importData:
+  enabled: false
+  contextBroker: context-broker.127.0.0.1.nip.io:8080
+  data: {}
 
 grafana:
   enabled: true
@@ -104,7 +128,10 @@ grafana:
   extraEmptyDirMounts:
     - name: plugins
       mountPath: /var/lib/grafana/plugins
-
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
 
   extraInitContainers:
     - name: init-plugin
@@ -138,8 +165,8 @@ grafana:
           withCredentials: false
           isDefault: true
           jsonData:
-            contextUrl: context-file:9000/context-file/ngsild-context.jsonld
-            timeseriesUrl: context-broker-scorpio:9090
+            contextUrl: http://context-file:9000/context-file/ngsild-context.jsonld
+            timeseriesUrl: http://context-broker-scorpio:9090
             tlsAuth: false
             tlsAuthWithCACert: false
             tlsSkipVerify: false
@@ -148,3 +175,10 @@ grafana:
             flavour: scorpio
           secureJsonData: {}
           editable: true
+
+reisewitz:
+  enabled: false
+
+rw-booking-subscription:
+  enabled: false
+  broker: context-broker-scorpio:9090

@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: import-file
+  namespace: {{ $.Release.Namespace | quote }}
+  labels:
+    app.kubernetes.io/name: import-file
+    {{ include "nemobil.labels" . | nindent 4 }}
+spec:
+  containers:
+    - name: import-file
+      image: curlimages/curl:latest
+      env:
+        - name: BROKER
+          value: {{ .Values.importData.contextBroker }}
+      volumeMounts:
+        - name: import-file
+          mountPath: /model
+      command: ["sh", "-c", "sleep 2 && curl --retry 50 --retry-delay 10 --connect-timeout 10 -X POST -H 'Content-Type: application/json' -H 'Link: <http://context-file:9000/context-file/ngsild-context.jsonld>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\"' -d @/model/importData.json http://$(BROKER)/ngsi-ld/v1/entityOperations/create"]
+  volumes:
+    - configMap:
+        defaultMode: 420
+        name: import-file
+      name: import-file
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: import-file
+  namespace: {{ $.Release.Namespace | quote }}
+  labels:
+    app.kubernetes.io/name: importData
+    {{ include "nemobil.labels" . | nindent 4 }}
+data:
+  importData.json: |-
+    {{ .Values.importData.data | nindent 4 }}
