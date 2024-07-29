@@ -1,0 +1,14 @@
+
+kubernetes-dashboard:
+  enabled: true
+  clusterRoleBinding:
+    create: true
+  serviceAccount:
+    create: true
+  ingress:
+    enabled: true
+    hosts:
+      - host: k8s.127.0.0.1.nip.io
+        paths:
+        - path: /
+          type: ImplementationSpecific

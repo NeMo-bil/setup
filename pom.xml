@@ -137,6 +137,21 @@
                         </configuration>
                     </execution>
                     <execution>
+                        <id>copy-resources-observability</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/charts/observability</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${main.basedir}/charts/observability</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>copy-resources-namespaces</id>
                         <phase>prepare-package</phase>
                         <goals>
@@ -194,7 +209,23 @@
                             </additionalArguments>
                         </configuration>
                     </execution>
-
+                    <execution>
+                        <id>template-observability</id>
+                        <goals>
+                            <goal>init</goal>
+                            <goal>dependency-update</goal>
+                            <goal>template</goal>
+                        </goals>
+                        <phase>package</phase>
+                        <configuration>
+                            <chartDirectory>${project.build.directory}/charts/observability</chartDirectory>
+                            <skipTemplate>false</skipTemplate>
+                            <templateGenerateName>true</templateGenerateName>
+                            <templateOutputDir>${project.build.directory}/k3s/observability</templateOutputDir>
+                            <additionalArguments>--name-template=observability --namespace=default -f ${main.basedir}/k3s/observability.yaml
+                            </additionalArguments>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>

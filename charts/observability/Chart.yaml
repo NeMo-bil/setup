@@ -1,0 +1,11 @@
+apiVersion: v2
+name: observability
+description: Umbrella Chart cluster observation tools
+type: application
+version: 1.0.0
+dependencies:
+  - name: headlamp
+    alias: kubernetes-dashboard
+    condition: kubernetes-dashboard.enabled
+    repository: https://headlamp-k8s.github.io/headlamp/
+    version: 0.23.0
