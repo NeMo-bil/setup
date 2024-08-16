@@ -8,9 +8,9 @@
     <artifactId>local-setup</artifactId>
     <version>0.0.1</version>
     <packaging>pom</packaging>
-    <!--<modules>
+    <modules>
         <module>it</module>
-    </modules>-->
+    </modules>
 
     <properties>
         <jdk.version>17</jdk.version>
@@ -238,6 +238,9 @@
                         <portBinding>8080:8080</portBinding>
                         <portBinding>9000:9000</portBinding>
                     </portBindings>
+                    <dockerImages>
+                        <dockerImage>scorpiobroker/all-in-one-runner:java-tim</dockerImage>
+                    </dockerImages>
                 </configuration>
                 <executions>
                     <execution>
@@ -245,6 +248,7 @@
                         <phase>deploy</phase>
                         <goals>
                             <goal>run</goal>
+                            <goal>image</goal>
                             <goal>apply</goal>
                         </goals>
                         <configuration>
@@ -253,7 +257,7 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>apply-participants</id>
+                        <id>apply-all</id>
                         <phase>deploy</phase>
                         <goals>
                             <goal>apply</goal>
