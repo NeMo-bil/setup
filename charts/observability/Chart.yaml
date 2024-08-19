@@ -2,7 +2,7 @@ apiVersion: v2
 name: observability
 description: Umbrella Chart cluster observation tools
 type: application
-version: 4.0.0
+version: 5.0.0
 dependencies:
   - name: headlamp
     alias: kubernetes-dashboard
