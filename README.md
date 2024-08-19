@@ -31,7 +31,7 @@ Configurations for all sub-charts (and sub-dependencies) can be managed through 
 > :warning: The local deployment uses [k3s](https://k3s.io/) and is currently only tested on linux.
 
 ```
-mvn clean install -Plocal
+mvn clean deploy -Plocal
 export KUBECONFIG=$(pwd)/target/k3s.yaml
 ```
 
