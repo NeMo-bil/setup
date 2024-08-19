@@ -2,7 +2,7 @@ apiVersion: v2
 name: nemobil
 description: Umbrella Chart for the NeMo.Bil deployment, combining all essential parts of a deployment.
 type: application
-version: 3.0.0
+version: 4.0.0
 dependencies:
   # monitoring
   - name: grafana
