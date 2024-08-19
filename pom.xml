@@ -238,9 +238,6 @@
                         <portBinding>8080:8080</portBinding>
                         <portBinding>9000:9000</portBinding>
                     </portBindings>
-                    <dockerImages>
-                        <dockerImage>scorpiobroker/all-in-one-runner:java-tim</dockerImage>
-                    </dockerImages>
                 </configuration>
                 <executions>
                     <execution>
