@@ -1,0 +1,160 @@
+grafana:
+  enabled: true
+
+postgis:
+  primary:
+    persistence:
+      enabled: false
+  readReplicas:
+    persistence:
+      enabled: false
+
+scorpio:
+  logging:
+    level: TRACE
+  ingress:
+    enabled: true
+    # only to make it available for the test initialization
+    hosts:
+      - host: context-broker.127.0.0.1.nip.io
+        paths:
+          - "/"
+
+importData:
+  enabled: true
+  contextBroker: context-broker.127.0.0.1.nip.io:8080
+  data: |-
+    [
+      {
+        "id": "urn:ngsi-ld:vehicle:someCab",
+        "type": "Vehicle",
+        "description": {
+          "type": "Property",
+          "value": "Some cab"
+        },
+        "location": {
+          "type": "GeoProperty",
+          "value": {
+            "type": "Point",
+            "coordinates": [
+              10.890079039102002,
+              48.0540141182173
+            ]
+          }
+        }
+      }
+    ]
+
+reisewitz:
+  enabled: true
+  ingress:
+    enabled: true
+    hosts:
+      - host: reisewitz.127.0.0.1.nip.io
+        paths:
+          - path: /
+            pathType: Prefix
+  args:
+    #- "--print-all-network-traffic"
+    - "--verbose"
+    - "--port=9021"
+    - "--max-request-journal=1000"
+    - "--local-response-templating"
+    - "--root-dir=/home/wiremock/storage"
+  mappings:
+    request.json: |
+      {
+        "request": {
+          "urlPath": "/notification/booking",
+          "method": "POST",
+          "headers": {
+              "contentType": {
+                "equalTo": "application/json"
+              }
+          }
+        },
+        "response": {
+          "status": 200
+        },
+        "serveEventListeners": [
+          {
+            "name": "webhook",
+            "parameters": {
+              "method": "POST",
+              "url": "http://context-broker.127.0.0.1.nip.io:8080/ngsi-ld/v1/entityOperations/create",
+              "headers": {
+                "Content-Type": "application/json",
+                "Link": "<http://context-file:9000/context-file/ngsild-context.jsonld>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\""
+              },
+              "body": "[{\"id\":\"urn:ngsi-ld:TripProposal:12345\",\"type\":\"TripProposal\",\"cabPickupLocation\":{\"type\":\"GeoProperty\",\"value\":{\"type\":\"Point\",\"coordinates\":[13.4050,52.5200]}},\"cabDropoffLocation\":{\"type\":\"GeoProperty\",\"value\":{\"type\":\"Point\",\"coordinates\":[2.3522,48.8566]}},\"pickupTime\":{\"type\":\"Property\",\"value\":\"2024-08-09T12:00:00Z\"},\"proposalReleaseTime\":{\"type\":\"Property\",\"value\":\"2024-08-08T18:00:00Z\"},\"request\":{\"type\":\"Relationship\",\"object\":\"{{jsonPath originalRequest.body '$.data[0].id'}}\"}}]"
+            }
+          }
+        ]
+      }
+    trip.json: |
+      {
+        "request": {
+          "urlPath": "/notification/trip",
+          "method": "POST",
+          "headers": {
+              "contentType": {
+                "equalTo": "application/json"
+              }
+          }
+        },
+        "response": {
+          "status": 200
+        },
+        "serveEventListeners": [
+          {
+            "name": "webhook",
+            "parameters": {
+              "method": "PUT",
+              "url": "http://context-broker.127.0.0.1.nip.io:8080/ngsi-ld/v1/entities/{{jsonPath originalRequest.body '$.data[0].id'}}/attrs/status",
+              "headers": {
+                "Content-Type": "application/json",
+                "Link": "<http://context-file:9000/context-file/ngsild-context.jsonld>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\""
+              },
+              "body": "{\"value\": [\"Planned\"],\"type\": \"Property\"}"
+            }
+          }
+        ]
+      }
+
+rw-request-subscription:
+  enabled: true
+  subscription: |
+    {
+      "description": "Notify me of trip requests",
+      "type": "Subscription",
+      "entities": [{"type": "TripRequest"}],
+      "notification": {
+        "attributes": ["id", "user"],
+        "format": "keyValues",
+        "endpoint": {
+          "uri": "http://reisewitz.127.0.0.1.nip.io:8080/notification/booking",
+          "accept": "application/json"
+        }
+      },
+      "@context": ["http://context-file:9000/context-file/ngsild-context.jsonld"]
+    }
+
+rw-trip-subscription:
+  enabled: true
+  subscription: |
+    {
+      "description": "Notify me of booking changes",
+      "type": "Subscription",
+      "entities": [{"type": "Trip"}],
+      "watchedAttributes": ["status"],
+      "q": "status==Unplanned",
+      "notification": {
+        "attributes": ["id", "user"],
+        "format": "keyValues",
+        "endpoint": {
+          "uri": "http://reisewitz.127.0.0.1.nip.io:8080/notification/trip",
+          "accept": "application/json"
+        }
+      },
+      "@context": ["http://context-file:9000/context-file/ngsild-context.jsonld"]
+    }

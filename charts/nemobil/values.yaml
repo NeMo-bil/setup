@@ -1,0 +1,730 @@
+# -- configuration to be shared between the context-broker components
+contextBroker:
+  generatePasswords:
+    # -- should a password for the database connection of context-broker components be generated in the cluster
+    enabled: true
+    #-- name of the secret to put the generated password into
+    secretName: context-broker-secret
+
+
+  
+
+# -- configuration for the postgresql to be deployed as part of the context-broker, see https://github.com/bitnami/charts/tree/main/bitnami/postgresql for all options
+postgis:
+  # -- should it be enabled? set to false if one outside the chart is used.
+  enabled: true
+  # -- overrides the generated name, provides stable service names - this should be avoided if multiple instances are available in the same namespace
+  fullnameOverride: context-broker-postgis
+  # -- overrides the generated name, provides stable service names - this should be avoided if multiple instances are available in the same namespace
+  nameOverride: context-broker-postgis
+  ## auth configuration for the database
+  auth:
+    existingSecret: context-broker-secret
+    secretKeys:
+      adminPasswordKey: postgres-admin-password
+      userPasswordKey: postgres-user-password
+  ## configuration of the postgres primary replicas
+  primary:
+    ## provide db initialization
+    initdb:
+      ## provide scripts for initialization
+      scripts:
+        # -- enable the postgis extension and create the database as expected by scorpio
+        enable.sh: |
+          psql postgresql://postgres:${POSTGRES_PASSWORD}@localhost:5432 -c "CREATE EXTENSION postgis;"
+          psql postgresql://postgres:${POSTGRES_PASSWORD}@localhost:5432 -c "CREATE DATABASE ngb;"
+
+## configuration of the context-broker - see https://github.com/FIWARE/helm-charts/tree/main/charts/scorpio-broker-aaio for details
+scorpio:
+  fullnameOverride: context-broker-scorpio
+  # -- should scorpio be enabled
+  enabled: true
+  ## configuration of the image to be used
+  image:
+    # -- repository to be used - resource friendly all-in-one-runner without kafka
+    repository: scorpiobroker/all-in-one-runner
+    # -- tag of the image to be used - latest java image without kafka
+    tag: java-4.1.15
+  ## configuration of the database to be used by broker
+  db:
+    # -- host of the db
+    dbhost: context-broker-postgis
+    # -- username to be used
+    user: postgres
+    existingSecret:
+      enabled: true
+      name: context-broker-secret
+      key: postgres-admin-password
+  ## configuration of the readiness probe
+  readinessProbe:
+    # -- path to be used for the readiness probe, older versions used /actuator/health
+    path: /q/health
+  ## configuration of the liveness probe
+  livenessProbe:
+    # -- path to be used for the readiness probe, older versions used /actuator/health
+    path: /q/health
+  ## configuration to be used for the service offered by scorpio
+  service:
+    # -- ClusterIP is the recommended type for most clusters
+    type: ClusterIP
+
+importData:
+  enabled: false
+  contextBroker: context-broker.127.0.0.1.nip.io:8080
+  data: {}
+
+grafana:
+  enabled: true
+  ingress:
+    enabled: true
+    hosts:
+      - grafana.127.0.0.1.nip.io
+  testFramework:
+    enabled: false
+  generatePasswords:
+    # -- should a password for the admin user be generated in the cluster
+    enabled: true
+    #-- name of the secret to put the generated password into
+    secretName: grafana-secret
+  #admin:
+  #  existingSecret: grafana-secret
+  env:
+    GF_AUTH_ANONYMOUS_ENABLED: true
+    GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+    GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: ngsild-grafana-datasource
+  extraEmptyDirMounts:
+    - name: plugins
+      mountPath: /var/lib/grafana/plugins
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+
+  extraInitContainers:
+    - name: init-plugin
+      image: busybox:1.36
+      command:
+        - 'sh'
+        - '-c'
+        - "cd /var/lib/grafana/plugins ; wget --no-check-certificate -O ngsild-datasource.tgz https://github.com/bfi-de/ngsild-grafana-datasource/releases/download/v1.0.0/ngsild-grafana-datasource-1.0.0.tgz ; tar xvf ngsild-datasource.tgz -C /var/lib/grafana/plugins/"
+      volumeMounts:
+        - mountPath: /var/lib/grafana/plugins
+          name: plugins
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: NGSI-LD
+          version: 1
+          orgId: 1
+          uid: ngsild_1
+          type: ngsild-grafana-datasource
+          typeLogoUrl: public/plugins/ngsild-grafana-datasource/img/logo.svg
+          # proxy or direct
+          access: proxy
+          url: context-broker-scorpio:9090
+          # <string> database user, if used
+          user:
+          # <string> database name, if used
+          database:
+          basicAuth: false
+          basicAuthUser: dummy
+          withCredentials: false
+          isDefault: true
+          jsonData:
+            contextUrl: http://context-file:9000/context-file/ngsild-context.jsonld
+            timeseriesUrl: http://context-broker-scorpio:9090
+            tlsAuth: false
+            tlsAuthWithCACert: false
+            tlsSkipVerify: false
+            httpMode: POST
+            httpHeaderName1: 'Access-Token'
+            flavour: scorpio
+          secureJsonData: {}
+          editable: true
+
+reisewitz:
+  enabled: false
+
+rw-request-subscription:
+  enabled: false
+  broker: context-broker-scorpio:9090
+
+rw-trip-subscription:
+  enabled: false
+  broker: context-broker-scorpio:9090
+
+# -- can be removed completely once the schema and context file are hosted publicly
+contextFile:
+  # -- should it be enabled? set to false if one outside the chart is used.
+  enabled: true
+  context: |
+    {
+        "@context": {
+            "id": "https://uri.etsi.org/ngsi-ld/identifier",
+            "type": "https://uri.etsi.org/ngsi-ld/type",
+            "TripRequest": "http://context-file:9000/context-file/TripRequest.json#",
+            "Vehicle": "http://context-file:9000/context-file/Vehicle.json#",
+            "user": "http://context-file:9000/context-file/TripRequest.json#user",
+            "startLocation": "http://context-file:9000/context-file/TripRequest.json#startLocation",
+            "targetLocation": "http://context-file:9000/context-file/TripRequest.json#targetLocation",
+            "targetTime": "http://context-file:9000/context-file/TripRequest.json#targetTime",
+            "pickupTime": "http://context-file:9000/context-file/TripRequest.json#pickupTime",
+            "skills": "http://context-file:9000/context-file/TripRequest.json#skills",
+            "requestedAdults": "http://context-file:9000/context-file/TripRequest.json#requestedAdults",
+            "requestedChilds": "http://context-file:9000/context-file/TripRequest.json#requestedChilds",
+            "luggage": "http://context-file:9000/context-file/TripRequest.json#luggage",
+            "maxCabs": "http://context-file:9000/context-file/TripRequest.json#maxCabs",
+            "personalPreferences": "http://context-file:9000/context-file/TripRequest.json#personalPreferences",
+            "vehicle": "http://context-file:9000/context-file/TripRequest.json#vehicle",
+            "priority": "http://context-file:9000/context-file/TripRequest.json#priority",
+            "location": "http://context-file:9000/context-file/Vehicle.json#location",
+            "label": "http://context-file:9000/context-file/Vehicle.json#label",
+            "licensePlate": "http://context-file:9000/context-file/Vehicle.json#licensePlate",
+            "nextStopLocation": "http://context-file:9000/context-file/Vehicle.json#nextStopLocation",
+            "nextStopArrival": "http://context-file:9000/context-file/Vehicle.json#nextStopArrival",
+            "vehicleScheduleGuid": "http://context-file:9000/context-file/Vehicle.json#vehicleScheduleGuid",
+            "stateOfSchedule": "http://context-file:9000/context-file/Vehicle.json#stateOfSchedule",
+            "batteryLevel": "http://context-file:9000/context-file/Vehicle.json#batteryLevel",
+            "remainingRange": "http://context-file:9000/context-file/Vehicle.json#remainingRange",
+            "consumption": "http://context-file:9000/context-file/Vehicle.json#consumption",
+            "energyConsumptionSinceLastStop": "http://context-file:9000/context-file/Vehicle.json#energyConsumptionSinceLastStop",
+            "state": "http://context-file:9000/context-file/Vehicle.json#state",
+            "bearing": "http://context-file:9000/context-file/Vehicle.json#bearing",
+            "speed": "http://context-file:9000/context-file/Vehicle.json#speed",
+            "deviation": "http://context-file:9000/context-file/Vehicle.json#deviation",
+            "chargingPower": "http://context-file:9000/context-file/Vehicle.json#chargingPower",
+            "chargedPower": "http://context-file:9000/context-file/Vehicle.json#chargedPower",
+            "tireAirPressure": "http://context-file:9000/context-file/Vehicle.json#tireAirPressure",
+            "mileageFromOdometer": "http://context-file:9000/context-file/Vehicle.json#mileageFromOdometer",
+            "load": "http://context-file:9000/context-file/Vehicle.json#load",
+            "weight": "http://context-file:9000/context-file/Vehicle.json#weight",
+            "chainedVehicles": "http://context-file:9000/context-file/Vehicle.json#chainedVehicles",
+            "chainedPosition": "http://context-file:9000/context-file/Vehicle.json#chainedPosition",
+            "powerSupply": "http://context-file:9000/context-file/Vehicle.json#powerSupply",
+            "temperatureInfoor": "http://context-file:9000/context-file/Vehicle.json#temperatureInfoor",
+            "temperatureOurside": "http://context-file:9000/context-file/Vehicle.json#temperatureOurside",
+            "schedule": "http://context-file:9000/context-file/Vehicle.json#schedule",
+            "powerConumptionParameter": "http://context-file:9000/context-file/Vehicle.json#powerConumptionParameter",
+            "flatratPowerConsumption": "http://context-file:9000/context-file/Vehicle.json#flatratPowerConsumption",
+            "risk": "http://context-file:9000/context-file/Vehicle.json#risk",
+            "totalEnergyCapacity": "http://context-file:9000/context-file/Vehicle.json#totalEnergyCapacity",
+            "initialEnergyCapacity": "http://context-file:9000/context-file/Vehicle.json#initialEnergyCapacity",
+            "maxSpeed": "http://context-file:9000/context-file/Vehicle.json#maxSpeed",
+            "regenerativePower": "http://context-file:9000/context-file/Vehicle.json#regenerativePower",
+            "operatingCompany": "http://context-file:9000/context-file/Vehicle.json#operatingCompany",
+            "maxiumRegenerativePower": "http://context-file:9000/context-file/Vehicle.json#maxiumRegenerativePower",
+            "defaultEnergyConsuptionPerKm": "http://context-file:9000/context-file/Vehicle.json#defaultEnergyConsuptionPerKm",
+            "restrictions": "http://context-file:9000/context-file/Vehicle.json#restrictions",
+            "chargingCurve": "http://context-file:9000/context-file/Vehicle.json#chargingCurve",
+            "maxSpeedAutonomous": "http://context-file:9000/context-file/Vehicle.json#maxSpeedAutonomous","TripProposal": "http://context-file:9000/context-file/TripProposal.json#",
+            "cabPickupLocation": "http://context-file:9000/context-file/TripProposal.json#cabPickupLocation",
+            "cabDropoffLocation": "http://context-file:9000/context-file/TripProposal.json#cabDropoffLocation",
+            "costs": "http://context-file:9000/context-file/TripProposal.json#costs",
+            "proposalReleaseTime": "http://context-file:9000/context-file/TripProposal.json#proposalReleaseTime",
+            "Trip": "http://context-file:9000/context-file/Trip.json#",
+            "user": "http://context-file:9000/context-file/Trip.json#user",
+            "vehicle": "http://context-file:9000/context-file/Trip.json#vehicle",
+            "cabPickupLocation": "http://context-file:9000/context-file/Trip.json#cabPickupLocation",
+            "cabDropoffLocation": "http://context-file:9000/context-file/Trip.json#cabDropoffLocation",
+            "targetTime": "http://context-file:9000/context-file/Trip.json#targetTime",
+            "pickupTime": "http://context-file:9000/context-file/Trip.json#pickupTime",
+            "costs": "http://context-file:9000/context-file/Trip.json#costs",
+            "carpoolInformation": "http://context-file:9000/context-file/Trip.json#carpoolInformation",
+            "skills": "http://context-file:9000/context-file/Trip.json#skills",
+            "requestedAdults": "http://context-file:9000/context-file/Trip.json#requestedAdults",
+            "requestedChilds": "http://context-file:9000/context-file/Trip.json#requestedChilds",
+            "luggage": "http://context-file:9000/context-file/Trip.json#luggage",
+            "maxCabs": "http://context-file:9000/context-file/Trip.json#maxCabs",
+            "personalPreferences": "http://context-file:9000/context-file/Trip.json#personalPreferences",
+            "status": "http://context-file:9000/context-file/Trip.json#status",
+            "expectedEnergyRequired": "http://context-file:9000/context-file/Trip.json#expectedEnergyRequired",
+            "expectedDrivingTime": "http://context-file:9000/context-file/Trip.json#expectedDrivingTime",
+            "expectedDistance": "http://context-file:9000/context-file/Trip.json#expectedDistance",
+            "tripReport": "http://context-file:9000/context-file/Trip.json#tripReport"
+        }
+    }
+  model:
+    Trip.json: |
+      {
+        "$schema": "http://json-schema.org/schema#",
+        "$schemaVersion": "0.0.1",
+        "$id": "http://context-file:9000/context-file/Trip.json",
+        "title": "Trip",
+        "description": "Daten eines Trips\nhttps://github.com/smart-data-models/dataModel.Transportation/blob/master/FleetVehicleOperation/doc/spec.md",
+        "modelTags": "",
+        "derivedFrom": "",
+        "required": [
+          "id",
+          "type"
+        ],
+        "license": "https://smart-data-models.github.io/dataModel.SmartTransport/Trip/LICENSE.md",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uri",
+            "description": "Property. Unique ID of the object"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "Trip"
+            ],
+            "description": "Property. It has to be Trip"
+          },
+          "user": {
+            "type": "string",
+            "format": "uri",
+            "description": "Relationship. Anfragender User "
+          },
+          "vehicle": {
+            "type": "string",
+            "format": "uri",
+            "description": "Relationship. Das ausführende Cab"
+          },
+          "cabPickupLocation": {
+            "type": "object",
+            "description": "GeoProperty. Ort an dem das Fahrzeug den Fahrgast einsammeln kann",
+            "properties": {}
+          },
+          "cabDropoffLocation": {
+            "type": "object",
+            "description": "GeoProperty. Ort an dem das Fahrzeug den Fahrgast absetzen kann",
+            "properties": {}
+          },
+          "targetTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Property. Erwartete Ankunftszeit\nToleranz - Range => Interval"
+          },
+          "pickupTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Property. Geplante Abholzeit\nToleranz - Range => Interval"
+          },
+          "costs": {
+            "type": "number",
+            "description": "Property. Kosten für die Fahrt"
+          },
+          "carpoolInformation": {
+            "type": "object",
+            "description": "Property. Information ob zusätzliche Passagiere zusteigen bzw zugestiegen sind",
+            "properties": {}
+          },
+          "skills": {
+            "type": "object",
+            "description": "ListProperty. Besonderheiten z.B: Kinderwagen, Rollstuhl, sonst. Einschränkungen zusammen mit einer Mengenangabe => zB 3 Rollstühle",
+            "properties": {}
+          },
+          "requestedAdults": {
+            "type": "number",
+            "description": "Property. Wie viele Erwachsene sollen transportiert werden"
+          },
+          "requestedChilds": {
+            "type": "number",
+            "description": "Property. Wie viele Kinder sollen transportiert werden"
+          },
+          "luggage": {
+            "type": "number",
+            "description": "Property. Gepäckstücke"
+          },
+          "maxCabs": {
+            "type": "number",
+            "description": "Property. Wie viele Cabs sollen für den Transport maximal kommen"
+          },
+          "personalPreferences": {
+            "type": "object",
+            "description": "Property. Persönliche Präferenzen der Fahrt (zB CarPooling, Toleranz Start/Ankunftszeit)",
+            "properties": {}
+          },
+          "status": {
+            "type": "string",
+            "description": "ListProperty. Status der Fahrt. Kann folgende Stati besitzen: Unplanned, Planned, Started, Performed, Canceled, PaymentFailure, PaymentSecured"
+          },
+          "expectedEnergyRequired": {
+            "type": "number",
+            "description": "Property. Geschätzte Energie für die Strecke"
+          },
+          "expectedDrivingTime": {
+            "type": "number",
+            "description": "Property. Geschätzte Fahrzeit für die Strecke"
+          },
+          "expectedDistance": {
+            "type": "number",
+            "description": "Property. Geschätzte Distanz für die Strecke"
+          },
+          "tripReport": {
+            "type": "object",
+            "description": "Property. Zusammenfassung über die abgeschlossene Fahrt. Embed TripReport",
+            "properties": {}
+          }
+        }
+      }
+    TripRequest.json: |
+      {
+        "$schema": "http://json-schema.org/schema#",
+        "$schemaVersion": "0.0.1",
+        "$id": "http://context-file:9000/context-file/TripRequest.json",
+        "title": "TripRequest",
+        "description": "Parameter für eine Fahrtanfrage\nhttps://github.com/moia-oss/alonso-mora/blob/master/core/src/main/java/org/matsim/alonso_mora/algorithm/DefaultAlonsoMoraRequest.java",
+        "modelTags": "",
+        "derivedFrom": "",
+        "required": [
+          "id",
+          "type"
+        ],
+        "license": "https://smart-data-models.github.io/dataModel.SmartTransport/TripRequest/LICENSE.md",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uri",
+            "description": "Property. Unique ID of the object"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "TripRequest"
+            ],
+            "description": "Property. It has to be TripRequest"
+          },
+          "user": {
+            "type": "string",
+            "format": "uri",
+            "description": "Relationship. Anfragender User"
+          },
+          "startLocation": {
+            "type": "object",
+            "description": "GeoProperty. Ort an dem der Fahrgast eingesammelt werden will",
+            "properties": {}
+          },
+          "targetLocation": {
+            "type": "object",
+            "description": "GeoProperty. Ort an dem der Fahrgast abgesetzt werden will",
+            "properties": {}
+          },
+          "targetTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Property. Gewünschte Ankunftszeit\n (Target - Toleranz davor)"
+          },
+          "pickupTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Property. Gewünschte Abholzeit\n (Pickup + Toleranz danach)"
+          },
+          "skills": {
+            "type": "object",
+            "description": "ListProperty. Besonderheiten z.B: Kinderwagen, Rollstuhl, sonst. Einschränkungen zusammen mit einer Mengenangabe => zB 3 Rollstühle",
+            "properties": {}
+          },
+          "requestedAdults": {
+            "type": "number",
+            "description": "Property. Wie viele Erwachsene sollen transportiert werden"
+          },
+          "requestedChilds": {
+            "type": "number",
+            "description": "Property. Wie viele Kinder sollen transportiert werden"
+          },
+          "luggage": {
+            "type": "number",
+            "description": "Property. Gepäckstücke"
+          },
+          "maxCabs": {
+            "type": "number",
+            "description": "Property. Wie viele Cabs sollen für den Transport maximal kommen"
+          },
+          "personalPreferences": {
+            "type": "object",
+            "description": "Property. Persönliche Präferenzen der Fahrt (zB CarPooling, Toleranz Start/Ankunftszeit)",
+            "properties": {}
+          },
+          "vehicle": {
+            "type": "string",
+            "format": "uri",
+            "description": "Relationship. Die ID des Fahrzeuges, falls ein dediziertes Fahrzeug angefordert wird"
+          },
+          "priority": {
+            "type": "number",
+            "description": "Property. Priorität der Anfrage. Je höher der Wert, desto dringlicher ist die Anfrage verglichen mit anderen Aufträgen in der Plattform"
+          }
+        }
+      }
+    TripProposal.json: |
+      {
+        "$schema": "http://json-schema.org/schema#",
+        "$schemaVersion": "0.0.1",
+        "$id": "http://context-file:9000/context-file/TripProposal.json",
+        "title": "TripProposal",
+        "description": "Vorschlag für eine Fahrt",
+        "modelTags": "",
+        "derivedFrom": "",
+        "required": [
+          "id",
+          "type"
+        ],
+        "license": "https://smart-data-models.github.io/dataModel.SmartTransport/TripProposal/LICENSE.md",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uri",
+            "description": "Property. Unique ID of the object"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "TripProposal"
+            ],
+            "description": "Property. It has to be TripProposal"
+          },
+          "cabPickupLocation": {
+            "type": "object",
+            "description": "GeoProperty. Ort an dem das Fahrzeug den Fahrgast einsammeln kann",
+            "properties": {}
+          },
+          "cabDropoffLocation": {
+            "type": "object",
+            "description": "GeoProperty. Ort an dem das Fahrzeug den Fahrgast absetzen kann",
+            "properties": {}
+          },
+          "targetTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Property. Erwartete Ankunftszeit\nToleranz - Range => Interval"
+          },
+          "pickupTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Property. Geplante Abholzeit\nToleranz - Range => Interval"
+          },
+          "costs": {
+            "type": "number",
+            "description": "Property. Erwartete Kosten für die Fahrt"
+          },
+          "proposalReleaseTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Property. Bis wann wird der Proposal freigehalten"
+          }
+        }
+      }
+    Vehicle.json: |
+      {
+        "$schema": "http://json-schema.org/schema#",
+        "$schemaVersion": "0.0.1",
+        "$id": "http://context-file:9000/context-file/Vehicle.json",
+        "title": "Vehicle",
+        "description": "Information about the vehicle digital twin, as the data is in \"now\". Consider the SDM https://github.com/smart-data-models/dataModel.Transportation/tree/master/Vehicle https://github.com/smart-data-models/dataModel.Transportation/blob/master/FleetVehicleStatus/doc/spec.md",
+        "modelTags": "",
+        "derivedFrom": "",
+        "required": [
+          "id",
+          "type"
+        ],
+        "license": "https://smart-data-models.github.io/dataModel.SmartTransport/Vehicle/LICENSE.md",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uri",
+            "description": "Property. Unique Id of the entity"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "Vehicle"
+            ],
+            "description": "Property. It has to be Vehicle"
+          },
+          "location": {
+            "type": "array",
+            "description": "GeoProperty. Current location",
+            "items": {
+              "type": ""
+            }
+          },
+          "label": {
+            "type": "string",
+            "description": "Property. Planned location of next stop"
+          },
+          "licensePlate": {
+            "type": "string",
+            "description": "Property. Planned location of next stop"
+          },
+          "nextStopLocation": {
+            "type": "array",
+            "description": "GeoProperty. Planned location of next stop",
+            "items": {
+              "type": ""
+            }
+          },
+          "nextStopArrival": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Property. Planned time of arrival at next stop"
+          },
+          "vehicleScheduleGuid": {
+            "type": "string",
+            "description": "Relationship. Pointer to vehicle schedule"
+          },
+          "stateOfSchedule": {
+            "type": "number",
+            "description": "Property. Current State of schedule enum:\n            - 0 - Running\n            - 1 - StartSchedule\n            - 2 - EndSchedule"
+          },
+          "batteryLevel": {
+            "type": "number",
+            "description": "Property. Current battery load"
+          },
+          "remainingRange": {
+            "type": "number",
+            "description": "Property. Current remaining range"
+          },
+          "consumption": {
+            "type": "number",
+            "description": "Property. Current energy consumption"
+          },
+          "energyConsumptionSinceLastStop": {
+            "type": "number",
+            "description": "Property. Energy consumption since last stop"
+          },
+          "state": {
+            "type": "array",
+            "description": "Property. Current state of vehicle enum:\n            - 0 - None\n            - 1 - DoorsOpened\n            - 2 - Idle\n            - 4 - WaintingForCustomer\n            - 8 - Konvoi\n            - 16 - CustomerTransport\n            - 32 - Charging\n            - 64 - Accident\n            - 128 - TrafficJam\n            - 256 - OperatorTrip\n            - 512 - FInalStopPositionReached",
+            "items": {
+              "type": ""
+            }
+          },
+          "bearing": {
+            "type": "number",
+            "description": "Property. Current heading of the vehicle relative to Nord"
+          },
+          "speed": {
+            "type": "number",
+            "description": "Property. Current speed of the vehicle"
+          },
+          "deviation": {
+            "type": "number",
+            "description": "Property. Current deviation to schedule (+ early, - late)"
+          },
+          "chargingPower": {
+            "type": "number",
+            "description": "Property. Current charging power"
+          },
+          "chargedPower": {
+            "type": "number",
+            "description": "Property. Current energy stored"
+          },
+          "tireAirPressure": {
+            "type": "array",
+            "description": "Property. Current tire pressure of all wheels",
+            "items": {
+              "type": ""
+            }
+          },
+          "mileageFromOdometer": {
+            "type": "number",
+            "description": "Property. Current total mileage"
+          },
+          "load": {
+            "type": "number",
+            "description": "Property. Current load of vehicle"
+          },
+          "weight": {
+            "type": "number",
+            "description": "Property. Current weight of vehicle"
+          },
+          "chainedVehicles": {
+            "type": "number",
+            "description": "Property. How many Cabs are chained (only Pros)"
+          },
+          "chainedPosition": {
+            "type": "number",
+            "description": "Property. Postion in chained convoi (only Cabs)"
+          },
+          "powerSupply": {
+            "type": "number",
+            "description": "Property. Current offloading power to Cabs"
+          },
+          "temperatureInfoor": {
+            "type": "number",
+            "description": "Property. Current infoor temperature"
+          },
+          "temperatureOurside": {
+            "type": "number",
+            "description": "Property. Current outside temperature"
+          },
+          "schedule": {
+            "type": "object",
+            "description": "Property. Sub_Schedule",
+            "properties": {}
+          },
+          "powerConumptionParameter": {
+            "type": "object",
+            "description": "Property. powerConsumptionParameter",
+            "properties": {}
+          },
+          "flatratPowerConsumption": {
+            "type": "number",
+            "description": "Property. Flatrate consumption"
+          },
+          "risk": {
+            "type": "number",
+            "description": "Property. Tolerance for remaining range"
+          },
+          "totalEnergyCapacity": {
+            "type": "number",
+            "description": "Property. Current total capacity"
+          },
+          "initialEnergyCapacity": {
+            "type": "number",
+            "description": "Property. Default charging level for starting to operate"
+          },
+          "maxSpeed": {
+            "type": "number",
+            "description": "Property. Max speed of vehicle"
+          },
+          "regenerativePower": {
+            "type": "number",
+            "description": "Property. Energy the vehicle can provide to the grid"
+          },
+          "operatingCompany": {
+            "type": "string",
+            "description": "Property. Operator company"
+          },
+          "maxiumRegenerativePower": {
+            "type": "number",
+            "description": "Property. Max regenerative power"
+          },
+          "defaultEnergyConsuptionPerKm": {
+            "type": "number",
+            "description": "Property. Estimated average consumption per km"
+          },
+          "skills": {
+            "type": "array",
+            "description": "Property. Features of the vehicle",
+            "items": {
+              "type": ""
+            }
+          },
+          "restrictions": {
+            "type": "array",
+            "description": "Property. Limits and restrictions of the vehicle",
+            "items": {
+              "type": ""
+            }
+          },
+          "chargingCurve": {
+            "type": "array",
+            "description": "Property. Description of the charging curve. Wie entwickelt sich die Ladekurve\\r\\n[0] => 0% \\r\\nAlternativ: Wie viel lange wird für 5% im passenden Korridor gebraucht?",
+            "items": {
+              "type": ""
+            }
+          },
+          "maxSpeedAutonomous": {
+            "type": "number",
+            "description": "Property. Max speed of vehicle while driving automomously"
+          }
+        }
+      }
