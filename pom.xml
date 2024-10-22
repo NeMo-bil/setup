@@ -237,6 +237,8 @@
                     <portBindings>
                         <portBinding>8080:8080</portBinding>
                         <portBinding>9000:9000</portBinding>
+                        <!-- MQTT -->
+                        <portBinding>1883:1883</portBinding>
                     </portBindings>
                 </configuration>
                 <executions>

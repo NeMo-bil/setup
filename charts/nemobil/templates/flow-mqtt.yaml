@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: flow-mqtt
+  namespace: {{ $.Release.Namespace | quote }}
+  labels:
+    app.kubernetes.io/name: flowmqtt
+    {{ include "nemobil.labels" . | nindent 4 }}
+    {{ .Values.nodered.sidecar.env.label}}: {{ .Values.nodered.sidecar.env.label_value | quote}}
+data:
+  flows.json: |-
+    {{ .Values.nodered.sidecar.data | nindent 4 }}

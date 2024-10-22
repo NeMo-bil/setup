@@ -1,0 +1,19 @@
+# Directly expose the mqtt port till the traefik tcp route is figured out
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/instance: local
+    app.kubernetes.io/name: mqtt
+  name: mqttnodeport
+  namespace: local
+spec:
+  ports:
+    - port: 1883
+      protocol: TCP
+      targetPort: 1883
+  selector:
+    app.kubernetes.io/instance: local
+    app.kubernetes.io/name: mqtt
+    pod.name: main
+  type: LoadBalancer

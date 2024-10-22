@@ -8,6 +8,30 @@ postgis:
   readReplicas:
     persistence:
       enabled: false
+mqtt:
+  global:
+    traefik:
+      fixedMiddlewares: []
+    fallbackDefaults:
+      storageClass: local-path
+  enabled: true
+  ingress:
+    main:
+      enabled: true
+      integrations:
+        traefik:
+          enabled: false
+          # Default to websecure
+          entrypoints: []
+          # Ensures tls annotation is set
+          forceTLS: false
+      hosts:
+        - # -- Host address. Helm template can be passed.
+          host: mqtt.127.0.0.1.nip.io
+          #     ## Configure the paths for the host
+          paths:
+            - # -- Path.  Helm template can be passed.
+              path: /
 
 scorpio:
   logging:
@@ -21,7 +45,7 @@ scorpio:
           - "/"
 
 importData:
-  enabled: true
+  enabled: false
   contextBroker: context-broker.127.0.0.1.nip.io:8080
   data: |-
     [
