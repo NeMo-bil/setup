@@ -239,6 +239,8 @@
                         <portBinding>9000:9000</portBinding>
                         <!-- MQTT -->
                         <portBinding>1883:1883</portBinding>
+                        <!-- MQTT Nodeport-->
+                        <portBinding>1884:1884</portBinding>
                     </portBindings>
                 </configuration>
                 <executions>

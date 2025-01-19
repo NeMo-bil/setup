@@ -28,3 +28,6 @@ spec:
     - name: http
       port: 8080
       targetPort: http
+#    - name: mqtt
+#      port: 1883
+#      targetPort: mqtt

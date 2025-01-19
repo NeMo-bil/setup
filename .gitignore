@@ -3,3 +3,5 @@
 /it/target/
 
 ngsild-datasource.tgz
+
+it/**/.lck

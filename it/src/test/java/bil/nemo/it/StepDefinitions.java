@@ -1,5 +1,6 @@
 package bil.nemo.it;
 
+import bil.nemo.it.vehicle.CarPool;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.squareup.okhttp.OkHttpClient;
@@ -33,12 +34,14 @@ public class StepDefinitions {
     private static final ObjectMapper OBJECT_MAPPER = new CacheSerdeableObjectMapper();
 
     private UserApplication userApplication = new UserApplication();
+    private CarPool carPool = new CarPool();
 
     private List<String> createdEntities = new ArrayList<>();
 
     @After
     public void cleanUp() {
-        cleanUpEntities();
+        //FIXME reenable later
+        //cleanUpEntities();
     }
 
     private void cleanUpEntities() {
@@ -99,6 +102,7 @@ public class StepDefinitions {
     @Given("Cabs existieren im System")
     public void checkForVehicle() throws Exception {
         // Check broker is initialized with a vehicle
+        carPool.addCab();
         checkForEntity(CAB_ID);
     }
 

@@ -24,6 +24,7 @@ spec:
             - --providers.kubernetesingress=true
             - --entrypoints.traefik.address=:8090
             - --entrypoints.http.address=:8080
+#            - --entrypoints.mqtt.address=:1883
             - --accesslog=true
             - --accesslog.fields.defaultmode=keep
             - --accesslog.fields.headers.defaultmode=keep
@@ -36,6 +37,8 @@ spec:
           ports:
             - name: http
               containerPort: 8080
+#            - name: mqtt
+#              containerPort: 1883
             - name: admin
               containerPort: 8090
           startupProbe:

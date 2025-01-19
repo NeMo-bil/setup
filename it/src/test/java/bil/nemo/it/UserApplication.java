@@ -12,11 +12,11 @@ import org.apache.http.HttpStatus;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import static bil.nemo.it.TestUtils.getLinkHeader;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class UserApplication {
     private static final OkHttpClient HTTP_CLIENT = new OkHttpClient();
@@ -41,18 +41,7 @@ public class UserApplication {
                         "coordinates", List.of(11.890079039102002, 49.0540141182173))),
                 "requestedAdults", Map.of("type", "Property", "value", 1),
                 "pickupTime", Map.of("type", "Property", "value", "2024-08-08T14:33:06Z"));
-
-
-        RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), OBJECT_MAPPER.writeValueAsString(requestEntity));
-
-
-        Request creationRequest = new Request.Builder()
-                .url(LocalSetupEnvironment.BROKER_ADDRESS + "/ngsi-ld/v1/entities")
-                .addHeader("Link", getLinkHeader())
-                .post(requestBody)
-                .build();
-        Response response = HTTP_CLIENT.newCall(creationRequest).execute();
-        assertEquals(HttpStatus.SC_CREATED, response.code(), "The entity should have been created.");
+        TestUtils.createEntity(requestEntity);
         return lastTripRequest;
     }
 
@@ -60,7 +49,7 @@ public class UserApplication {
 
         HttpUrl.Builder urlBuilder = HttpUrl.parse(LocalSetupEnvironment.BROKER_ADDRESS + "/ngsi-ld/v1/entities").newBuilder();
         urlBuilder.addQueryParameter("type", "TripProposal");
-        urlBuilder.addQueryParameter("q", "request==%s".formatted(lastTripRequest));
+        urlBuilder.addQueryParameter("q", "request==\"%s\"".formatted(lastTripRequest));
 
         String url = urlBuilder.build().toString();
 
@@ -68,8 +57,8 @@ public class UserApplication {
         Request request = new Request.Builder()
                 .url(url)
                 .get()
-                .addHeader("Link", getLinkHeader())
-                .addHeader("Accept", "application/ld+json")
+                //.addHeader("Link", getLinkHeader())
+                //.addHeader("Accept", "application/ld+json")
                 .build();
 
         Response response = HTTP_CLIENT.newCall(request).execute();
@@ -97,28 +86,18 @@ public class UserApplication {
                 "requestedAdults", Map.of("type", "Property", "value", 1),
                 "pickupTime", Map.of("type", "Property", "value", "2024-08-08T14:33:06Z"),
                 "status", Map.of("type", "Property", "value", List.of("Unplanned")));
+        TestUtils.createEntity(requestEntity);
 
-
-        RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), OBJECT_MAPPER.writeValueAsString(requestEntity));
-
-
-        Request creationRequest = new Request.Builder()
-                .url(LocalSetupEnvironment.BROKER_ADDRESS + "/ngsi-ld/v1/entities")
-                .addHeader("Link", getLinkHeader())
-                .post(requestBody)
-                .build();
-        Response response = HTTP_CLIENT.newCall(creationRequest).execute();
-        assertEquals(HttpStatus.SC_CREATED, response.code(), "The entity should have been created.");
         lastTrip = id;
         return lastTrip;
     }
 
     public boolean checkTripAccepted() throws IOException {
 
-        HttpUrl.Builder urlBuilder = HttpUrl.parse(LocalSetupEnvironment.BROKER_ADDRESS + "/ngsi-ld/v1/entities").newBuilder();
-        urlBuilder.addQueryParameter("type", "Trip");
+        HttpUrl.Builder urlBuilder = HttpUrl.parse(LocalSetupEnvironment.BROKER_ADDRESS + "/ngsi-ld/v1/entities/"+lastTrip).newBuilder();
+        //urlBuilder.addQueryParameter("type", "Trip");
         // FIXME: Searching for all trips of the user and not directly for the trip with the id since the query didn't work properly. Should be fixed to avoid going thru the list
-        urlBuilder.addQueryParameter("q", "user==%s".formatted(USER_ID));
+        //urlBuilder.addQueryParameter("q", "user=='%s'".formatted(USER_ID));
 
         String url = urlBuilder.build().toString();
 
@@ -134,9 +113,15 @@ public class UserApplication {
         assertEquals(HttpStatus.SC_OK, response.code(), "The entity should be present.");
 
         JsonNode jsonNode = OBJECT_MAPPER.readTree(response.body().string());
-        assertTrue(jsonNode.isArray() && !jsonNode.isEmpty(), "At least one Trip should be present.");
-        long tripsMarkedPlanned = Streams.stream(jsonNode.iterator()).map(a -> a.get("status")).map(a -> a.get("value")).map(JsonNode::textValue).filter("Planned"::equals).count();
-        assertEquals(jsonNode.size(),tripsMarkedPlanned, "All trips of the user should be marked as planned");
+        assertNotNull(jsonNode, "One Trip should be present.");
+        boolean tripPlanned = Optional
+                .of(jsonNode)
+                .map(a -> a.get("status"))
+                .map(a -> a.get("value"))
+                .map(JsonNode::textValue)
+                .filter("Planned"::equals)
+                .isPresent();
+        assertTrue(tripPlanned, "Trip of the user should be marked as planned");
         return true;
     }
 }

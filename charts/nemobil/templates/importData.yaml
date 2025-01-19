@@ -1,5 +1,6 @@
-apiVersion: v1
-kind: Pod
+{{- if .Values.importData.enabled }}
+apiVersion: batch/v1
+kind: Job
 metadata:
   name: import-file
   namespace: {{ $.Release.Namespace | quote }}
@@ -7,21 +8,25 @@ metadata:
     app.kubernetes.io/name: import-file
     {{ include "nemobil.labels" . | nindent 4 }}
 spec:
-  containers:
-    - name: import-file
-      image: curlimages/curl:latest
-      env:
-        - name: BROKER
-          value: {{ .Values.importData.contextBroker }}
-      volumeMounts:
+  backoffLimit: 10
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
         - name: import-file
-          mountPath: /model
-      command: ["sh", "-c", "sleep 2 && curl --retry 50 --retry-delay 10 --connect-timeout 10 -X POST -H 'Content-Type: application/json' -H 'Link: <http://context-file:9000/context-file/ngsild-context.jsonld>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\"' -d @/model/importData.json http://$(BROKER)/ngsi-ld/v1/entityOperations/create"]
-  volumes:
-    - configMap:
-        defaultMode: 420
-        name: import-file
-      name: import-file
+          image: curlimages/curl:latest
+          env:
+            - name: BROKER
+              value: {{ .Values.importData.contextBroker }}
+          volumeMounts:
+            - name: import-file
+              mountPath: /model
+          command: ["sh", "-c", "sleep 2 && sh /model/import.sh"]
+      volumes:
+        - configMap:
+            defaultMode: 0555
+            name: import-file
+          name: import-file
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -32,5 +37,19 @@ metadata:
     app.kubernetes.io/name: importData
     {{ include "nemobil.labels" . | nindent 4 }}
 data:
+  import.sh : |-
+    #!/bin/bash
+    set -x
+    URL="http://"${BROKER}"/ngsi-ld/v1/entityOperations/upsert?options=update"
+    HTTP_STATUS=$(curl -o /dev/null --connect-timeout 10 -X POST -H 'Content-Type: application/json' -H 'Link: <http://context-file:9000/context-file/ngsild-context.jsonld>; rel="http://www.w3.org/ns/json-ld#context"; type="application/ld+json"' -d @/model/importData.json -s -w "%{http_code}" "$URL")
+    if [[ "$HTTP_STATUS" == "201" || "$HTTP_STATUS" == "204" || "$HTTP_STATUS" == "409" ]]; then
+      echo "Received expected status: $HTTP_STATUS"
+      exit 0
+    else
+      echo "Unexpected status: $HTTP_STATUS"
+      exit 1
+    fi
+
   importData.json: |-
     {{ .Values.importData.data | nindent 4 }}
+{{- end }}
