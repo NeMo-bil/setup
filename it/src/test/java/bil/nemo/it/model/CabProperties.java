@@ -1,5 +1,20 @@
 package bil.nemo.it.model;
 
-public record CabProperties (GeoLocation location,double bearing, Double batteryLevel,Double consumption, Double speed, Integer chainedPosition, String received_at){
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+@AllArgsConstructor
+public class CabProperties {
+
+    private GeoLocation location;
+    private Double bearing;
+    private Double batteryLevel;
+    private Double consumption;
+    private Double speed;
+    private Integer chainedPosition;
+    private String received_at;
 
 }

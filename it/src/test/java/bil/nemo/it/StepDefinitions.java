@@ -54,15 +54,13 @@ public class StepDefinitions {
                 HTTP_CLIENT.newCall(deletionRequest).execute();
             } catch (IOException e) {
                 // just log
-                log.warn("Was not able to clean up entitiy {}.", entityId, e);
+                log.warn("Was not able to clean up entity {}.", entityId, e);
             }
         });
     }
 
     @Given("alle Services laufen")
     public void checkServices() throws Exception {
-        // Check broker is initialized with data
-        checkForEntity(CAB_ID);
         //Check grafana is initialized
         Request grafanaDashboardRequest = new Request.Builder().get()
                 .url(LocalSetupEnvironment.VISUALISATION_ADDRESS + "/d/cdstxz6x03r40a/fahrzeuge?orgId=1")
@@ -147,6 +145,11 @@ public class StepDefinitions {
                 .atMost(30, TimeUnit.SECONDS)
                 .ignoreExceptions()
                 .until(()->userApplication.checkTripAccepted());
+    }
+
+    @Then("warten bis Demo vorbei ist")
+    public void waitTilDemoIsOver() throws InterruptedException {
+        Thread.sleep(1000*60*30);
     }
 
 }

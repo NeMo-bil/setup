@@ -1,0 +1,25 @@
+{
+  "startLocation": {
+    "value": {
+      "type": "Point",
+      "coordinates": [
+        51.72977672550465,
+        8.753316940440714
+      ]
+    },
+    "type": "GeoProperty"
+  },
+  "targetLocation": {
+    "value": {
+      "type": "Point",
+      "coordinates": [
+        52.72977672550465,
+        8.753316940440714
+      ]
+    },
+    "type": "GeoProperty"
+  },
+  "user": "urn:ngsi-ld:User:user1",
+  "id": "urn:ngsi-ld:TripRequest:f8d4e1e6-10d0-421d-83cb-35e45e207071",
+  "type": "TripRequest"
+}

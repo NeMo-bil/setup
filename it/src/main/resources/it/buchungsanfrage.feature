@@ -10,3 +10,4 @@ Feature: Buchungsanfrage
     And der Nutzer einen auswaehlen
     And der Bezahlservice die Buchung erlaubt
     And die Operative Planung die Buchung bestaetigt
+    And warten bis Demo vorbei ist

@@ -48,6 +48,16 @@ dependencies:
     condition: rw-trip-subscription.enabled
     repository: https://pulledtim.github.io/helm-charts
     version: 2.2.1
+  - name: ngsild-subscriber
+    alias: rw-trip-plan-subscription
+    condition: rw-trip-plan-subscription.enabled
+    repository: https://pulledtim.github.io/helm-charts
+    version: 2.2.1
+  - name: ngsild-subscriber
+    alias: nodered-vehicle-subscription
+    condition: nodered-vehicle-subscription.enabled
+    repository: https://pulledtim.github.io/helm-charts
+    version: 2.2.1
   # Vehicle communication
   - name: mosquitto
     alias: mqtt

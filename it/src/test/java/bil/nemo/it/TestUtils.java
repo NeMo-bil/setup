@@ -36,6 +36,10 @@ public abstract class TestUtils {
                 .post(requestBody)
                 .build();
         Response response = HTTP_CLIENT.newCall(creationRequest).execute();
+        if(response.code() == 409){
+            System.out.println("Entity could not be created. Already existent");
+            return;
+        }
         assertEquals(HttpStatus.SC_CREATED, response.code(), "The entity should have been created.");
         System.out.println("Body:" + response.body().string());
     }

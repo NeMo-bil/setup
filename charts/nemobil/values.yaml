@@ -46,404 +46,405 @@ nodered:
       label: node-red-settings
       label_value: "1"
     data: |
-      [
-          {
-            "id": "71259242a1777bee",
-            "type": "tab",
-            "label": "Vehicle Telemetry",
-            "disabled": false,
-            "info": "",
-            "env": []
-          },
-          {
-            "id": "763740da219918ee",
-            "type": "group",
-            "z": "71259242a1777bee",
-            "name": "Vehicle Telemetry",
-            "style": {
-              "label": true,
-              "stroke": "#777777",
-              "fill": "#ffC000",
-              "color": "#000000"
-            },
-            "nodes": [
-              "e01e2459471a3410",
-              "66a2f70585904bd2",
-              "20f7451b5b3d3ce7",
-              "5042ce293ed5f5e3",
-              "a13ace3df003c538"
-            ],
-            "x": 54,
-            "y": 179,
-            "w": 1152,
-            "h": 82
-          },
-          {
-            "id": "41b6631a468fb594",
-            "type": "group",
-            "z": "71259242a1777bee",
-            "name": "Vehicle Command",
-            "style": {
-              "label": true,
-              "stroke": "#777777",
-              "fill": "#ffC000",
-              "color": "#000000"
-            },
-            "nodes": [
-              "4fb66f7f26f78dad",
-              "0eeddf3c3a228fa6",
-              "1a845a21e2a26b13",
-              "33db484abea63746",
-              "c046c0934b9a89af",
-              "1da1a364ecc4f248",
-              "e9eb442f3ab8f313",
-              "5691c2b0f7f091e9",
-              "485738ec6f9e9b0f",
-              "eebc2dfc119e6109"
-            ],
-            "x": 54,
-            "y": 319,
-            "w": 972,
-            "h": 182
-          },
-          {
-            "id": "e01e2459471a3410",
-            "type": "function",
-            "z": "71259242a1777bee",
-            "g": "763740da219918ee",
-            "name": "Prepare Smart Data Model",
-            "func": "node.debug(\"Payload:\" +  JSON.stringify(msg.payload))\n//const dateObserved = msg.payload.received_at\nconst topicParts = msg.topic.split(\"/\")\n// TODO Check if length\nconst id = topicParts[1]\nflow.set(\"id\", id);\n\nconst payload = msg.payload\n\nconst location = payload.location\nconst latitude = location.latitude\nconst longitude = location.longitude\n\nlet ngsi = {}\nngsi.payload = {\n    \"id\": \"urn:ngsi-ld:Vehicle:\" + id,\n    \"type\": \"http://context-file:9000/context-file/ngsild-context.jsonld\",\n    \"location\": {\n        \"type\": \"Point\",\n        \"coordinates\": [\n            latitude, \n            longitude\n        ]        \n    }\n}\n\n/**\n * \"dateObserved\": {\n        \"type\": \"String\",\n        \"value\": dateObserved\n    },\n */\n\nmsg.payload = ngsi.payload\n\nreturn msg;",
-            "outputs": 1,
-            "timeout": "",
-            "noerr": 0,
-            "initialize": "",
-            "finalize": "",
-            "libs": [],
-            "x": 400,
-            "y": 220,
-            "wires": [
-              [
-                "20f7451b5b3d3ce7"
-              ]
-            ]
-          },
-          {
-            "id": "66a2f70585904bd2",
-            "type": "mqtt in",
-            "z": "71259242a1777bee",
-            "g": "763740da219918ee",
-            "name": "",
-            "topic": "vehicle/+/telemetry",
-            "qos": "2",
-            "datatype": "auto-detect",
-            "broker": "2cfae533763a2920",
-            "nl": false,
-            "rap": true,
-            "rh": 0,
-            "inputs": 0,
-            "x": 170,
-            "y": 220,
-            "wires": [
-              [
-                "e01e2459471a3410"
-              ]
-            ]
-          },
-          {
-            "id": "20f7451b5b3d3ce7",
-            "type": "function",
-            "z": "71259242a1777bee",
-            "g": "763740da219918ee",
-            "name": "Prepare NGSI-LD update request",
-            "func": "msg.headers = {}\nmsg.headers['Content-Type'] = 'application/json';\nmsg.headers['Link'] = '<http://context-file:9000/context-file/ngsild-context.jsonld\"; type=\"application/ld+json\"';\nmsg.method = 'PATCH';\nmsg.url = env.get(\"NGSI_LD_SERVER\") + \"/ngsi-ld/v1/entities/\" + flow.get(\"id\") + \"/attrs?options=upsert\"\n\n// node.warn(msg.url)\n\nreturn msg;",
-            "outputs": 1,
-            "timeout": "",
-            "noerr": 0,
-            "initialize": "",
-            "finalize": "",
-            "libs": [],
-            "x": 680,
-            "y": 220,
-            "wires": [
-              [
-                "5042ce293ed5f5e3"
-              ]
-            ]
-          },
-          {
-            "id": "5042ce293ed5f5e3",
-            "type": "http request",
-            "z": "71259242a1777bee",
-            "g": "763740da219918ee",
-            "name": "POST Broker",
-            "method": "use",
-            "ret": "txt",
-            "paytoqs": "ignore",
-            "url": "",
-            "tls": "",
-            "persist": false,
-            "proxy": "",
-            "insecureHTTPParser": false,
-            "authType": "",
-            "senderr": false,
-            "headers": [],
-            "x": 950,
-            "y": 220,
-            "wires": [
-              [
-                "a13ace3df003c538"
-              ]
-            ]
-          },
-          {
-            "id": "a13ace3df003c538",
-            "type": "debug",
-            "z": "71259242a1777bee",
-            "g": "763740da219918ee",
-            "name": "debug 7",
-            "active": true,
-            "tosidebar": true,
-            "console": false,
-            "tostatus": false,
-            "complete": "true",
-            "targetType": "full",
-            "statusVal": "",
-            "statusType": "auto",
-            "x": 1100,
-            "y": 220,
-            "wires": []
-          },
-          {
-            "id": "4fb66f7f26f78dad",
-            "type": "debug",
-            "z": "71259242a1777bee",
-            "g": "41b6631a468fb594",
-            "name": "debug 8",
-            "active": true,
-            "tosidebar": true,
-            "console": false,
-            "tostatus": false,
-            "complete": "true",
-            "targetType": "full",
-            "statusVal": "",
-            "statusType": "auto",
-            "x": 920,
-            "y": 460,
-            "wires": []
-          },
-          {
-            "id": "0eeddf3c3a228fa6",
-            "type": "http in",
-            "z": "71259242a1777bee",
-            "g": "41b6631a468fb594",
-            "name": "Vehicle Notifications",
-            "url": "/notification",
-            "method": "post",
-            "upload": true,
-            "swaggerDoc": "",
-            "x": 170,
-            "y": 360,
-            "wires": [
-              [
-                "33db484abea63746",
-                "5691c2b0f7f091e9"
-              ]
-            ]
-          },
-          {
-            "id": "1a845a21e2a26b13",
-            "type": "function",
-            "z": "71259242a1777bee",
-            "g": "41b6631a468fb594",
-            "name": "function 1",
-            "func": "node.debug(\"Payload:\" +  JSON.stringify(msg.payload))\nvar notification = msg.payload.data[0]\nconst idParts = notification.id.split(\":\")\nvar vehicleId = idParts[3]\nvar nextStopLocation = notification.nextStopLocation\nlet json = {}\njson.payload = {\n    \"nextStopLocation\": nextStopLocation\n}\njson.topic = \"vehicle/\" + vehicleId + \"/command\"\nreturn json;",
-            "outputs": 1,
-            "timeout": 0,
-            "noerr": 0,
-            "initialize": "",
-            "finalize": "",
-            "libs": [],
-            "x": 780,
-            "y": 360,
-            "wires": [
-              [
-                "1da1a364ecc4f248",
-                "e9eb442f3ab8f313",
-                "4fb66f7f26f78dad"
-              ]
-            ]
-          },
-          {
-            "id": "33db484abea63746",
-            "type": "switch",
-            "z": "71259242a1777bee",
-            "g": "41b6631a468fb594",
-            "name": "Notification Type correct",
-            "property": "payload.type",
-            "propertyType": "msg",
-            "rules": [
+        [
               {
-                "t": "eq",
-                "v": "Notification",
-                "vt": "str"
-              }
-            ],
-            "checkall": "true",
-            "repair": false,
-            "outputs": 1,
-            "x": 390,
-            "y": 360,
-            "wires": [
-              [
-                "c046c0934b9a89af",
-                "485738ec6f9e9b0f"
-              ]
-            ]
-          },
-          {
-            "id": "c046c0934b9a89af",
-            "type": "switch",
-            "z": "71259242a1777bee",
-            "g": "41b6631a468fb594",
-            "name": "Payload available",
-            "property": "payload.payload.data",
-            "propertyType": "msg",
-            "rules": [
+                "id": "71259242a1777bee",
+                "type": "tab",
+                "label": "Vehicle Telemetry",
+                "disabled": false,
+                "info": "",
+                "env": []
+              },
               {
-                "t": "jsonata_exp",
-                "v": "$count($)>0",
-                "vt": "jsonata"
+                "id": "763740da219918ee",
+                "type": "group",
+                "z": "71259242a1777bee",
+                "name": "Vehicle Telemetry",
+                "style": {
+                  "label": true,
+                  "stroke": "#777777",
+                  "fill": "#ffC000",
+                  "color": "#000000"
+                },
+                "nodes": [
+                  "e01e2459471a3410",
+                  "66a2f70585904bd2",
+                  "20f7451b5b3d3ce7",
+                  "5042ce293ed5f5e3",
+                  "a13ace3df003c538"
+                ],
+                "x": 54,
+                "y": 179,
+                "w": 1152,
+                "h": 82
+              },
+              {
+                "id": "41b6631a468fb594",
+                "type": "group",
+                "z": "71259242a1777bee",
+                "name": "Vehicle Command",
+                "style": {
+                  "label": true,
+                  "stroke": "#777777",
+                  "fill": "#ffC000",
+                  "color": "#000000"
+                },
+                "nodes": [
+                  "4fb66f7f26f78dad",
+                  "0eeddf3c3a228fa6",
+                  "1a845a21e2a26b13",
+                  "33db484abea63746",
+                  "c046c0934b9a89af",
+                  "1da1a364ecc4f248",
+                  "e9eb442f3ab8f313",
+                  "5691c2b0f7f091e9",
+                  "485738ec6f9e9b0f",
+                  "eebc2dfc119e6109"
+                ],
+                "x": 54,
+                "y": 319,
+                "w": 972,
+                "h": 182
+              },
+              {
+                "id": "e01e2459471a3410",
+                "type": "function",
+                "z": "71259242a1777bee",
+                "g": "763740da219918ee",
+                "name": "Prepare Smart Data Model",
+                "func": "node.debug(\"Payload:\" +  JSON.stringify(msg.payload))\n//const dateObserved = msg.payload.received_at\nconst topicParts = msg.topic.split(\"/\")\n// TODO Check if length\nconst id = topicParts[1]\nflow.set(\"id\", id);\n\nconst payload = msg.payload\n\nconst location = payload.location\nconst latitude = location.latitude\nconst longitude = location.longitude\n\nlet ngsi = {}\nngsi.payload = {\n    \"location\": {\n        \"type\": \"GeoProperty\",\n        \"value\": {\n            \"type\": \"Point\",\n            \"coordinates\": [\n                latitude, \n                longitude\n            ] \n        }               \n    }\n}\n\n/**\n * \"dateObserved\": {\n        \"type\": \"String\",\n        \"value\": dateObserved\n    },\n */\n\nmsg.payload = ngsi.payload\n\nreturn msg;",
+                "outputs": 1,
+                "timeout": "",
+                "noerr": 0,
+                "initialize": "",
+                "finalize": "",
+                "libs": [],
+                "x": 400,
+                "y": 220,
+                "wires": [
+                  [
+                    "20f7451b5b3d3ce7"
+                  ]
+                ]
+              },
+              {
+                "id": "66a2f70585904bd2",
+                "type": "mqtt in",
+                "z": "71259242a1777bee",
+                "g": "763740da219918ee",
+                "name": "",
+                "topic": "vehicle/+/telemetry",
+                "qos": "2",
+                "datatype": "auto-detect",
+                "broker": "2cfae533763a2920",
+                "nl": false,
+                "rap": true,
+                "rh": 0,
+                "inputs": 0,
+                "x": 170,
+                "y": 220,
+                "wires": [
+                  [
+                    "e01e2459471a3410"
+                  ]
+                ]
+              },
+              {
+                "id": "20f7451b5b3d3ce7",
+                "type": "function",
+                "z": "71259242a1777bee",
+                "g": "763740da219918ee",
+                "name": "Prepare NGSI-LD update request",
+                "func": "msg.headers = {}\nmsg.headers['Content-Type'] = 'application/json';\nmsg.headers['Link'] = '<http://context-file:9000/context-file/ngsild-context.jsonld>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\"';\nmsg.method = 'PATCH';\nmsg.url = env.get(\"NGSI_LD_SERVER\") + \"/ngsi-ld/v1/entities/\" + flow.get(\"id\") + \"/attrs\"\n\n// node.warn(msg.url)\n\nreturn msg;",
+                "outputs": 1,
+                "timeout": "",
+                "noerr": 0,
+                "initialize": "",
+                "finalize": "",
+                "libs": [],
+                "x": 680,
+                "y": 220,
+                "wires": [
+                  [
+                    "5042ce293ed5f5e3"
+                  ]
+                ]
+              },
+              {
+                "id": "5042ce293ed5f5e3",
+                "type": "http request",
+                "z": "71259242a1777bee",
+                "g": "763740da219918ee",
+                "name": "POST Broker",
+                "method": "use",
+                "ret": "txt",
+                "paytoqs": "ignore",
+                "url": "",
+                "tls": "",
+                "persist": false,
+                "proxy": "",
+                "insecureHTTPParser": false,
+                "authType": "",
+                "senderr": false,
+                "headers": [],
+                "x": 950,
+                "y": 220,
+                "wires": [
+                  [
+                    "a13ace3df003c538"
+                  ]
+                ]
+              },
+              {
+                "id": "a13ace3df003c538",
+                "type": "debug",
+                "z": "71259242a1777bee",
+                "g": "763740da219918ee",
+                "name": "debug 7",
+                "active": true,
+                "tosidebar": true,
+                "console": false,
+                "tostatus": false,
+                "complete": "true",
+                "targetType": "full",
+                "statusVal": "",
+                "statusType": "auto",
+                "x": 1100,
+                "y": 220,
+                "wires": []
+              },
+              {
+                "id": "4fb66f7f26f78dad",
+                "type": "debug",
+                "z": "71259242a1777bee",
+                "g": "41b6631a468fb594",
+                "name": "debug 8",
+                "active": true,
+                "tosidebar": true,
+                "console": false,
+                "tostatus": false,
+                "complete": "true",
+                "targetType": "full",
+                "statusVal": "",
+                "statusType": "auto",
+                "x": 920,
+                "y": 460,
+                "wires": []
+              },
+              {
+                "id": "0eeddf3c3a228fa6",
+                "type": "http in",
+                "z": "71259242a1777bee",
+                "g": "41b6631a468fb594",
+                "name": "Vehicle Notifications",
+                "url": "/notification",
+                "method": "post",
+                "upload": true,
+                "swaggerDoc": "",
+                "x": 170,
+                "y": 360,
+                "wires": [
+                  [
+                    "33db484abea63746",
+                    "5691c2b0f7f091e9"
+                  ]
+                ]
+              },
+              {
+                "id": "1a845a21e2a26b13",
+                "type": "function",
+                "z": "71259242a1777bee",
+                "g": "41b6631a468fb594",
+                "name": "function 1",
+                "func": "node.debug(\"Payload:\" +  JSON.stringify(msg.payload))\nvar notification = msg.payload.data[0]\n//const idParts = notification.id.split(\":\")\n//var vehicleId = idParts[3]\nvar vehicleId = notification.id\nvar nextStopLocation = notification.nextStopLocation\nlet json = {}\njson.payload = {\n    \"nextStopLocation\": nextStopLocation\n}\njson.topic = \"vehicle/\" + vehicleId + \"/command\"\nreturn json;",
+                "outputs": 1,
+                "timeout": 0,
+                "noerr": 0,
+                "initialize": "",
+                "finalize": "",
+                "libs": [],
+                "x": 780,
+                "y": 360,
+                "wires": [
+                  [
+                    "1da1a364ecc4f248",
+                    "e9eb442f3ab8f313",
+                    "4fb66f7f26f78dad"
+                  ]
+                ]
+              },
+              {
+                "id": "33db484abea63746",
+                "type": "switch",
+                "z": "71259242a1777bee",
+                "g": "41b6631a468fb594",
+                "name": "Notification Type correct",
+                "property": "payload.type",
+                "propertyType": "msg",
+                "rules": [
+                  {
+                    "t": "eq",
+                    "v": "Notification",
+                    "vt": "str"
+                  }
+                ],
+                "checkall": "true",
+                "repair": false,
+                "outputs": 1,
+                "x": 390,
+                "y": 360,
+                "wires": [
+                  [
+                    "c046c0934b9a89af",
+                    "485738ec6f9e9b0f"
+                  ]
+                ]
+              },
+              {
+                "id": "c046c0934b9a89af",
+                "type": "switch",
+                "z": "71259242a1777bee",
+                "g": "41b6631a468fb594",
+                "name": "Payload available",
+                "property": "payload.payload.data",
+                "propertyType": "msg",
+                "rules": [
+                  {
+                    "t": "jsonata_exp",
+                    "v": "$count($)>0",
+                    "vt": "jsonata"
+                  }
+                ],
+                "checkall": "true",
+                "repair": false,
+                "outputs": 1,
+                "x": 610,
+                "y": 360,
+                "wires": [
+                  [
+                    "1a845a21e2a26b13",
+                    "eebc2dfc119e6109"
+                  ]
+                ]
+              },
+              {
+                "id": "1da1a364ecc4f248",
+                "type": "mqtt out",
+                "z": "71259242a1777bee",
+                "g": "41b6631a468fb594",
+                "name": "",
+                "topic": "",
+                "qos": "",
+                "retain": "",
+                "respTopic": "",
+                "contentType": "",
+                "userProps": "",
+                "correl": "",
+                "expiry": "",
+                "broker": "2cfae533763a2920",
+                "x": 930,
+                "y": 360,
+                "wires": []
+              },
+              {
+                "id": "e9eb442f3ab8f313",
+                "type": "http response",
+                "z": "71259242a1777bee",
+                "g": "41b6631a468fb594",
+                "name": "",
+                "statusCode": "200",
+                "headers": {},
+                "x": 940,
+                "y": 400,
+                "wires": []
+              },
+              {
+                "id": "5691c2b0f7f091e9",
+                "type": "debug",
+                "z": "71259242a1777bee",
+                "g": "41b6631a468fb594",
+                "name": "debug 9",
+                "active": true,
+                "tosidebar": true,
+                "console": false,
+                "tostatus": false,
+                "complete": "true",
+                "targetType": "full",
+                "statusVal": "",
+                "statusType": "auto",
+                "x": 320,
+                "y": 460,
+                "wires": []
+              },
+              {
+                "id": "485738ec6f9e9b0f",
+                "type": "debug",
+                "z": "71259242a1777bee",
+                "g": "41b6631a468fb594",
+                "name": "debug 10",
+                "active": true,
+                "tosidebar": true,
+                "console": false,
+                "tostatus": false,
+                "complete": "true",
+                "targetType": "full",
+                "statusVal": "",
+                "statusType": "auto",
+                "x": 560,
+                "y": 460,
+                "wires": []
+              },
+              {
+                "id": "eebc2dfc119e6109",
+                "type": "debug",
+                "z": "71259242a1777bee",
+                "g": "41b6631a468fb594",
+                "name": "debug 11",
+                "active": true,
+                "tosidebar": true,
+                "console": false,
+                "tostatus": false,
+                "complete": "true",
+                "targetType": "full",
+                "statusVal": "",
+                "statusType": "auto",
+                "x": 740,
+                "y": 460,
+                "wires": []
+              },
+              {
+                "id": "2cfae533763a2920",
+                "type": "mqtt-broker",
+                "name": "local",
+                "broker": "local-mqtt",
+                "port": "1883",
+                "clientid": "",
+                "autoConnect": true,
+                "usetls": false,
+                "protocolVersion": "4",
+                "keepalive": "60",
+                "cleansession": true,
+                "autoUnsubscribe": true,
+                "birthTopic": "",
+                "birthQos": "0",
+                "birthRetain": "false",
+                "birthPayload": "",
+                "birthMsg": {},
+                "closeTopic": "",
+                "closeQos": "0",
+                "closeRetain": "false",
+                "closePayload": "",
+                "closeMsg": {},
+                "willTopic": "",
+                "willQos": "0",
+                "willRetain": "false",
+                "willPayload": "",
+                "willMsg": {},
+                "userProps": "",
+                "sessionExpiry": ""
               }
-            ],
-            "checkall": "true",
-            "repair": false,
-            "outputs": 1,
-            "x": 610,
-            "y": 360,
-            "wires": [
-              [
-                "1a845a21e2a26b13",
-                "eebc2dfc119e6109"
-              ]
-            ]
-          },
-          {
-            "id": "1da1a364ecc4f248",
-            "type": "mqtt out",
-            "z": "71259242a1777bee",
-            "g": "41b6631a468fb594",
-            "name": "",
-            "topic": "",
-            "qos": "",
-            "retain": "",
-            "respTopic": "",
-            "contentType": "",
-            "userProps": "",
-            "correl": "",
-            "expiry": "",
-            "broker": "2cfae533763a2920",
-            "x": 930,
-            "y": 360,
-            "wires": []
-          },
-          {
-            "id": "e9eb442f3ab8f313",
-            "type": "http response",
-            "z": "71259242a1777bee",
-            "g": "41b6631a468fb594",
-            "name": "",
-            "statusCode": "200",
-            "headers": {},
-            "x": 940,
-            "y": 400,
-            "wires": []
-          },
-          {
-            "id": "5691c2b0f7f091e9",
-            "type": "debug",
-            "z": "71259242a1777bee",
-            "g": "41b6631a468fb594",
-            "name": "debug 9",
-            "active": true,
-            "tosidebar": true,
-            "console": false,
-            "tostatus": false,
-            "complete": "true",
-            "targetType": "full",
-            "statusVal": "",
-            "statusType": "auto",
-            "x": 320,
-            "y": 460,
-            "wires": []
-          },
-          {
-            "id": "485738ec6f9e9b0f",
-            "type": "debug",
-            "z": "71259242a1777bee",
-            "g": "41b6631a468fb594",
-            "name": "debug 10",
-            "active": true,
-            "tosidebar": true,
-            "console": false,
-            "tostatus": false,
-            "complete": "true",
-            "targetType": "full",
-            "statusVal": "",
-            "statusType": "auto",
-            "x": 560,
-            "y": 460,
-            "wires": []
-          },
-          {
-            "id": "eebc2dfc119e6109",
-            "type": "debug",
-            "z": "71259242a1777bee",
-            "g": "41b6631a468fb594",
-            "name": "debug 11",
-            "active": true,
-            "tosidebar": true,
-            "console": false,
-            "tostatus": false,
-            "complete": "true",
-            "targetType": "full",
-            "statusVal": "",
-            "statusType": "auto",
-            "x": 740,
-            "y": 460,
-            "wires": []
-          },
-          {
-            "id": "2cfae533763a2920",
-            "type": "mqtt-broker",
-            "name": "local",
-            "broker": "local-mqtt",
-            "port": "1883",
-            "clientid": "",
-            "autoConnect": true,
-            "usetls": false,
-            "protocolVersion": "4",
-            "keepalive": "60",
-            "cleansession": true,
-            "autoUnsubscribe": true,
-            "birthTopic": "",
-            "birthQos": "0",
-            "birthRetain": "false",
-            "birthPayload": "",
-            "birthMsg": {},
-            "closeTopic": "",
-            "closeQos": "0",
-            "closeRetain": "false",
-            "closePayload": "",
-            "closeMsg": {},
-            "willTopic": "",
-            "willQos": "0",
-            "willRetain": "false",
-            "willPayload": "",
-            "willMsg": {},
-            "userProps": "",
-            "sessionExpiry": ""
-          }
-      ]
+        ]
+
 orion:
   enabled: true
   test:
@@ -605,7 +606,7 @@ grafana:
             tlsSkipVerify: false
             httpMode: POST
             httpHeaderName1: 'Access-Token'
-            flavour: scorpio
+            flavour: orion
           secureJsonData: {}
           editable: true
 
@@ -620,6 +621,13 @@ rw-trip-subscription:
   enabled: false
   broker: context-broker.127.0.0.1.nip.io:8080
 
+rw-trip-plan-subscription:
+  enabled: false
+  broker: context-broker.127.0.0.1.nip.io:8080
+
+nodered-vehicle-subscription:
+  enabled: false
+  broker: context-broker.127.0.0.1.nip.io:8080
 # -- can be removed completely once the schema and context file are hosted publicly
 contextFile:
   # -- should it be enabled? set to false if one outside the chart is used.
@@ -629,7 +637,12 @@ contextFile:
           "@context": {
               "TripRequest": "https://raw.githubusercontent.com/NeMo-bil/model/refs/heads/Vehicle/docs/TripRequest/schema.json",
               "startLocation":  "https://raw.githubusercontent.com/NeMo-bil/model/refs/heads/Vehicle/docs/TripRequest/schema.json#startLocation",
-              "targetLocation": "https://raw.githubusercontent.com/NeMo-bil/model/refs/heads/Vehicle/docs/TripRequest/schema.json#targetLocation"
+              "targetLocation": "https://raw.githubusercontent.com/NeMo-bil/model/refs/heads/Vehicle/docs/TripRequest/schema.json#targetLocation",
+              "Trip": "https://raw.githubusercontent.com/NeMo-bil/model/refs/heads/Vehicle/docs/Trip/schema.json",
+              "pickupLocation":  "https://raw.githubusercontent.com/NeMo-bil/model/refs/heads/Vehicle/docs/Trip/schema.json#pickupLocation",
+              "dropoffLocation": "https://raw.githubusercontent.com/NeMo-bil/model/refs/heads/Vehicle/docs/Trip/schema.json#dropoffLocation",
+              "Vehicle": "https://raw.githubusercontent.com/NeMo-bil/model/refs/heads/Vehicle/docs/Vehicle/schema.json",
+              "nextStopLocation":  "https://raw.githubusercontent.com/NeMo-bil/model/refs/heads/Vehicle/docs/Vehicle/schema.json#nextStopLocation"
           }
     }
 

@@ -36,9 +36,9 @@ public class UserApplication {
                 "id", lastTripRequest,
                 "user", Map.of("type", "Property", "value", "urn:ngsi-ld:User:user1"),
                 "startLocation", Map.of("type", "GeoProperty", "value", Map.of("type", "Point",
-                        "coordinates", List.of(10.890079039102002, 48.0540141182173))),
+                        "coordinates", List.of(48.0540141182173,10.890079039102002))),
                 "targetLocation", Map.of("type", "GeoProperty", "value", Map.of("type", "Point",
-                        "coordinates", List.of(11.890079039102002, 49.0540141182173))),
+                        "coordinates", List.of(49.0540141182173,11.890079039102002))),
                 "requestedAdults", Map.of("type", "Property", "value", 1),
                 "pickupTime", Map.of("type", "Property", "value", "2024-08-08T14:33:06Z"));
         TestUtils.createEntity(requestEntity);
@@ -79,10 +79,10 @@ public class UserApplication {
         Map requestEntity = Map.of("type", "Trip",
                 "id", id,
                 "user", Map.of("type", "Property", "value", USER_ID),
-                "cabPickupLocation", Map.of("type", "GeoProperty", "value", Map.of("type", "Point",
-                        "coordinates", List.of(10.890079039102002, 48.0540141182173))),
-                "cabDropoffLocation", Map.of("type", "GeoProperty", "value", Map.of("type", "Point",
-                        "coordinates", List.of(11.890079039102002, 49.0540141182173))),
+                "pickupLocation", Map.of("type", "GeoProperty", "value", Map.of("type", "Point",
+                        "coordinates", List.of(48.0540141182173,10.890079039102002))),
+                "dropoffLocation", Map.of("type", "GeoProperty", "value", Map.of("type", "Point",
+                        "coordinates", List.of(49.0540141182173,11.890079039102002))),
                 "requestedAdults", Map.of("type", "Property", "value", 1),
                 "pickupTime", Map.of("type", "Property", "value", "2024-08-08T14:33:06Z"),
                 "status", Map.of("type", "Property", "value", List.of("Unplanned")));

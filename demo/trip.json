@@ -1,0 +1,42 @@
+{
+  "pickupTime": {
+    "type": "Property",
+    "value": "2024-08-08T14:33:06Z"
+  },
+  "cabPickupLocation": {
+    "type": "GeoProperty",
+    "value": {
+      "type": "Point",
+      "coordinates": [
+        51.72977672550465,
+        8.753316940440714
+      ]
+    }
+  },
+  "requestedAdults": {
+    "type": "Property",
+    "value": 1
+  },
+  "id": "urn:ngsi-ld:Trip:ccb1f755-9990-4051-bff0-286c4b5a16f1",
+  "type": "Trip",
+  "cabDropoffLocation": {
+    "type": "GeoProperty",
+    "value": {
+      "type": "Point",
+      "coordinates": [
+        52.72977672550465,
+        8.753316940440714
+      ]
+    }
+  },
+  "user": {
+    "type": "Property",
+    "value": "urn:ngsi-ld:User:user1"
+  },
+  "status": {
+    "type": "Property",
+    "value": [
+      "Unplanned"
+    ]
+  }
+}
