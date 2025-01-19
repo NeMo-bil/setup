@@ -29,7 +29,6 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "id": 1,
       "links": [],
       "panels": [
         {
@@ -116,7 +115,7 @@ data:
                       "vertical": "center"
                     },
                     "text": {
-                      "field": "name",
+                      "field": "id",
                       "fixed": "",
                       "mode": "field"
                     },
@@ -134,9 +133,9 @@ data:
                   "options": "A"
                 },
                 "location": {
-                  "latitude": "someCab:location",
-                  "longitude": "someCab:location",
-                  "mode": "auto"
+                  "latitude": "longitude",
+                  "longitude": "latitude",
+                  "mode": "coords"
                 },
                 "name": "Cabs",
                 "tooltip": true,
@@ -171,6 +170,7 @@ data:
           "type": "geomap"
         }
       ],
+      "refresh": "10s",
       "schemaVersion": 39,
       "tags": [],
       "templating": {
@@ -180,7 +180,7 @@ data:
         "from": "now-6h",
         "to": "now"
       },
-      "timeRangeUpdatedDuringEditOrView": false,
+      "timeRangeUpdatedDuringEditOrView": true,
       "timepicker": {},
       "timezone": "browser",
       "title": "Fahrzeuge",

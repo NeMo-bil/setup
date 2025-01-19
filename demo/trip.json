@@ -3,13 +3,13 @@
     "type": "Property",
     "value": "2024-08-08T14:33:06Z"
   },
-  "cabPickupLocation": {
+  "pickupLocation": {
     "type": "GeoProperty",
     "value": {
       "type": "Point",
       "coordinates": [
-        51.72977672550465,
-        8.753316940440714
+        54.72977672550465,
+        13.753316940440714
       ]
     }
   },
@@ -19,7 +19,7 @@
   },
   "id": "urn:ngsi-ld:Trip:ccb1f755-9990-4051-bff0-286c4b5a16f1",
   "type": "Trip",
-  "cabDropoffLocation": {
+  "dropoffLocation": {
     "type": "GeoProperty",
     "value": {
       "type": "Point",
