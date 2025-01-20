@@ -1,0 +1,280 @@
+{
+	"info": {
+		"_postman_id": "f0f2689f-b0f8-4943-8be0-f9c970c63d2d",
+		"name": "Platform",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "28627786"
+	},
+	"item": [
+		{
+			"name": "Create TripRequest",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.collectionVariables.set(\"triprequest_id\", \"urn:ngsi-ld:TripRequest:\"+Math.random(1,100000));"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Link",
+						"value": "<http://context-file:9000/context-file/ngsild-context.jsonld>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\"",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"startLocation\": {\n    \"value\": {\n      \"type\": \"Point\",\n      \"coordinates\": [\n        54.72977672550465,\n        13.753316940440714\n      ]\n    },\n    \"type\": \"GeoProperty\"\n  },\n  \"targetLocation\": {\n    \"value\": {\n      \"type\": \"Point\",\n      \"coordinates\": [\n        52.72977672550465,\n        8.753316940440714\n      ]\n    },\n    \"type\": \"GeoProperty\"\n  },\n  \"user\": \"urn:ngsi-ld:User:user1\",\n  \"id\": \"{{triprequest_id}}\",\n  \"type\": \"TripRequest\"\n}\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://context-broker.127.0.0.1.nip.io:8080/ngsi-ld/v1/entities/",
+					"protocol": "http",
+					"host": [
+						"context-broker",
+						"127",
+						"0",
+						"0",
+						"1",
+						"nip",
+						"io"
+					],
+					"port": "8080",
+					"path": [
+						"ngsi-ld",
+						"v1",
+						"entities",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Retrieve TripRequest",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Link",
+						"value": "<http://context-file:9000/context-file/ngsild-context.jsonld>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\"",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://context-broker.127.0.0.1.nip.io:8080/ngsi-ld/v1/entities/{{triprequest_id}}",
+					"protocol": "http",
+					"host": [
+						"context-broker",
+						"127",
+						"0",
+						"0",
+						"1",
+						"nip",
+						"io"
+					],
+					"port": "8080",
+					"path": [
+						"ngsi-ld",
+						"v1",
+						"entities",
+						"{{triprequest_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Retrieve TripProposals",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Link",
+						"value": "<http://context-file:9000/context-file/ngsild-context.jsonld>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\"",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://context-broker.127.0.0.1.nip.io:8080/ngsi-ld/v1/entities/?type=TripProposal&q=request==%22{{triprequest_id}}%22",
+					"protocol": "http",
+					"host": [
+						"context-broker",
+						"127",
+						"0",
+						"0",
+						"1",
+						"nip",
+						"io"
+					],
+					"port": "8080",
+					"path": [
+						"ngsi-ld",
+						"v1",
+						"entities",
+						""
+					],
+					"query": [
+						{
+							"key": "type",
+							"value": "TripProposal"
+						},
+						{
+							"key": "q",
+							"value": "request==%22{{triprequest_id}}%22"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Trip",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.collectionVariables.set(\"trip_id\", \"urn:ngsi-ld:Trip:\"+_.random(1,100000));"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Link",
+						"value": "<http://context-file:9000/context-file/ngsild-context.jsonld>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\"",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"pickupTime\": {\n    \"type\": \"Property\",\n    \"value\": \"2024-08-08T14:33:06Z\"\n  },\n  \"pickupLocation\": {\n    \"type\": \"GeoProperty\",\n    \"value\": {\n      \"type\": \"Point\",\n      \"coordinates\": [\n        54.72977672550465,\n        13.753316940440714\n      ]\n    }\n  },\n  \"requestedAdults\": {\n    \"type\": \"Property\",\n    \"value\": 1\n  },\n  \"id\": \"{{trip_id}}\",\n  \"type\": \"Trip\",\n  \"dropoffLocation\": {\n    \"type\": \"GeoProperty\",\n    \"value\": {\n      \"type\": \"Point\",\n      \"coordinates\": [\n        52.72977672550465,\n        8.753316940440714\n      ]\n    }\n  },\n  \"user\": {\n    \"type\": \"Property\",\n    \"value\": \"urn:ngsi-ld:User:user1\"\n  },\n  \"status\": {\n    \"type\": \"Property\",\n    \"value\": [\n      \"Unplanned\"\n    ]\n  }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://context-broker.127.0.0.1.nip.io:8080/ngsi-ld/v1/entities/",
+					"protocol": "http",
+					"host": [
+						"context-broker",
+						"127",
+						"0",
+						"0",
+						"1",
+						"nip",
+						"io"
+					],
+					"port": "8080",
+					"path": [
+						"ngsi-ld",
+						"v1",
+						"entities",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Trip",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Link",
+						"value": "<http://context-file:9000/context-file/ngsild-context.jsonld>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\"",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://context-broker.127.0.0.1.nip.io:8080/ngsi-ld/v1/entities/{{trip_id}}",
+					"protocol": "http",
+					"host": [
+						"context-broker",
+						"127",
+						"0",
+						"0",
+						"1",
+						"nip",
+						"io"
+					],
+					"port": "8080",
+					"path": [
+						"ngsi-ld",
+						"v1",
+						"entities",
+						"{{trip_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Vehicle",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Link",
+						"value": "<http://context-file:9000/context-file/ngsild-context.jsonld>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\"",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://context-broker.127.0.0.1.nip.io:8080/ngsi-ld/v1/entities/urn:ngsi-ld:vehicle:001",
+					"protocol": "http",
+					"host": [
+						"context-broker",
+						"127",
+						"0",
+						"0",
+						"1",
+						"nip",
+						"io"
+					],
+					"port": "8080",
+					"path": [
+						"ngsi-ld",
+						"v1",
+						"entities",
+						"urn:ngsi-ld:vehicle:001"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "triprequest_id",
+			"value": ""
+		},
+		{
+			"key": "trip_id",
+			"value": ""
+		},
+		{
+			"key": "vehicle_id",
+			"value": "urn:ngsi-ld:vehicle:001"
+		}
+	]
+}
