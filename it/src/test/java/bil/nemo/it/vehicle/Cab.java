@@ -5,6 +5,7 @@ import bil.nemo.it.model.CabProperties;
 import bil.nemo.it.model.GeoLocation;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Getter;
 import org.eclipse.paho.client.mqttv3.*;
 
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 import static bil.nemo.it.LocalSetupEnvironment.MQTT_COMMAND_TOPIC_TEMPLATE;
 import static bil.nemo.it.LocalSetupEnvironment.MQTT_TELEMETRY_TOPIC_TEMPLATE;
 import static bil.nemo.it.TestUtils.createEntity;
+import static bil.nemo.it.UserApplication.ORIGINAL_PICKUP_LOCATION;
 
 /**
  *
@@ -24,12 +26,15 @@ public class Cab implements IMqttMessageListener, Runnable {
     private static final int MQTT_QOS_AT_LEAST_ONCE = 1;
 
     private final IMqttClient client;
+    @Getter
     private CabProperties properties;
     private final ObjectMapper mapper;
+    @Getter
     private final String id;
 
     private GeoLocation currentLocation = new GeoLocation(48.0, 10.0);
-    private GeoLocation nextStopLocation = new GeoLocation(48.0, 10.0);
+    @Getter
+    private GeoLocation nextStopLocation = ORIGINAL_PICKUP_LOCATION;
 
 
     public Cab() throws Exception {
@@ -44,7 +49,11 @@ public class Cab implements IMqttMessageListener, Runnable {
         client = new MqttClient("tcp://%s".formatted(LocalSetupEnvironment.MQTT_BROKER_ADDRESS), publisherId);
         createEntity(Map.of("id", id, "type", "Vehicle", "nextStopLocation", Map.of("type", "GeoProperty", "value", Map.of("type", "Point",
                 "coordinates", List.of(nextStopLocation.latitude(), nextStopLocation.longitude()))), "location", Map.of("type", "GeoProperty", "value", Map.of("type", "Point",
-                "coordinates", List.of(currentLocation.latitude(), currentLocation.longitude())))));
+                "coordinates", List.of(currentLocation.latitude(), currentLocation.longitude()))),
+                "speed", Map.of("type", "Property", "value",1.0),
+                "bearing", Map.of("type", "Property", "value",1.0),
+                "consumption", Map.of("type", "Property", "value",1.0),
+                "batteryLevel", Map.of("type", "Property", "value",1.0)));
         Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this, 10, 10, TimeUnit.SECONDS);
     }
 

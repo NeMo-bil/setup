@@ -1,5 +1,6 @@
 package bil.nemo.it;
 
+import bil.nemo.it.vehicle.Cab;
 import bil.nemo.it.vehicle.CarPool;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static bil.nemo.it.LocalSetupEnvironment.CAB_ID;
+import static bil.nemo.it.UserApplication.ORIGINAL_PICKUP_LOCATION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
@@ -145,6 +147,23 @@ public class StepDefinitions {
                 .atMost(30, TimeUnit.SECONDS)
                 .ignoreExceptions()
                 .until(()->userApplication.checkTripAccepted());
+    }
+
+    @Then("das Fahrzeug den Fahrtbefehl erhält")
+    public void checkDriveCommand(){
+        Awaitility
+                .await()
+                .atMost(30, TimeUnit.SECONDS)
+                .ignoreExceptions()
+                .until(()->cabMoved(CAB_ID));
+    }
+
+    private boolean cabMoved(String id){
+        return carPool
+                .getCab(id)
+                .map(Cab::getNextStopLocation)
+                .filter(nextStop->!nextStop.equals(ORIGINAL_PICKUP_LOCATION))
+                .isPresent();
     }
 
     @Then("warten bis Demo vorbei ist")

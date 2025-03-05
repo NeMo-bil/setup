@@ -2,12 +2,16 @@ grafana:
   enabled: true
 
 postgis:
+  global:
+    defaultStorageClass: local-path
+  namespaceOverride: local
   primary:
     persistence:
-      enabled: false
+      enabled: true
   readReplicas:
     persistence:
-      enabled: false
+      enabled: true
+
 mqtt:
   global:
     traefik:
@@ -37,7 +41,7 @@ scorpio:
   logging:
     level: TRACE
   ingress:
-    enabled: true
+    enabled: false
     # only to make it available for the test initialization
     hosts:
       - host: context-broker.127.0.0.1.nip.io

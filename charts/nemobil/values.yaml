@@ -47,72 +47,73 @@ nodered:
       label_value: "1"
     data: |
         [
-              {
+            {
                 "id": "71259242a1777bee",
                 "type": "tab",
                 "label": "Vehicle Telemetry",
                 "disabled": false,
                 "info": "",
                 "env": []
-              },
-              {
+            },
+            {
                 "id": "763740da219918ee",
                 "type": "group",
                 "z": "71259242a1777bee",
                 "name": "Vehicle Telemetry",
                 "style": {
-                  "label": true,
-                  "stroke": "#777777",
-                  "fill": "#ffC000",
-                  "color": "#000000"
+                    "label": true,
+                    "stroke": "#777777",
+                    "fill": "#ffC000",
+                    "color": "#000000"
                 },
                 "nodes": [
-                  "e01e2459471a3410",
-                  "66a2f70585904bd2",
-                  "20f7451b5b3d3ce7",
-                  "5042ce293ed5f5e3",
-                  "a13ace3df003c538"
+                    "e01e2459471a3410",
+                    "66a2f70585904bd2",
+                    "20f7451b5b3d3ce7",
+                    "5042ce293ed5f5e3",
+                    "a13ace3df003c538",
+                    "d3d68f6b6da065e3"
                 ],
                 "x": 54,
                 "y": 179,
                 "w": 1152,
-                "h": 82
-              },
-              {
+                "h": 122
+            },
+            {
                 "id": "41b6631a468fb594",
                 "type": "group",
                 "z": "71259242a1777bee",
                 "name": "Vehicle Command",
                 "style": {
-                  "label": true,
-                  "stroke": "#777777",
-                  "fill": "#ffC000",
-                  "color": "#000000"
+                    "label": true,
+                    "stroke": "#777777",
+                    "fill": "#ffC000",
+                    "color": "#000000"
                 },
                 "nodes": [
-                  "4fb66f7f26f78dad",
-                  "0eeddf3c3a228fa6",
-                  "1a845a21e2a26b13",
-                  "33db484abea63746",
-                  "c046c0934b9a89af",
-                  "1da1a364ecc4f248",
-                  "e9eb442f3ab8f313",
-                  "5691c2b0f7f091e9",
-                  "485738ec6f9e9b0f",
-                  "eebc2dfc119e6109"
+                    "4fb66f7f26f78dad",
+                    "0eeddf3c3a228fa6",
+                    "1a845a21e2a26b13",
+                    "33db484abea63746",
+                    "c046c0934b9a89af",
+                    "1da1a364ecc4f248",
+                    "e9eb442f3ab8f313",
+                    "5691c2b0f7f091e9",
+                    "485738ec6f9e9b0f",
+                    "eebc2dfc119e6109"
                 ],
                 "x": 54,
                 "y": 319,
                 "w": 972,
                 "h": 182
-              },
-              {
+            },
+            {
                 "id": "e01e2459471a3410",
                 "type": "function",
                 "z": "71259242a1777bee",
                 "g": "763740da219918ee",
                 "name": "Prepare Smart Data Model",
-                "func": "node.debug(\"Payload:\" +  JSON.stringify(msg.payload))\n//const dateObserved = msg.payload.received_at\nconst topicParts = msg.topic.split(\"/\")\n// TODO Check if length\nconst id = topicParts[1]\nflow.set(\"id\", id);\n\nconst payload = msg.payload\n\nconst location = payload.location\nconst latitude = location.latitude\nconst longitude = location.longitude\n\nlet ngsi = {}\nngsi.payload = {\n    \"location\": {\n        \"type\": \"GeoProperty\",\n        \"value\": {\n            \"type\": \"Point\",\n            \"coordinates\": [\n                latitude, \n                longitude\n            ] \n        }               \n    }\n}\n\n/**\n * \"dateObserved\": {\n        \"type\": \"String\",\n        \"value\": dateObserved\n    },\n */\n\nmsg.payload = ngsi.payload\n\nreturn msg;",
+                "func": "node.debug(\"Payload:\" +  JSON.stringify(msg.payload))\n//const dateObserved = msg.payload.received_at\nconst topicParts = msg.topic.split(\"/\")\n// TODO Check if length\nconst id = topicParts[1]\nflow.set(\"id\", id);\n\nconst payload = msg.payload\n\nconst location = payload.location\nconst latitude = location.latitude\nconst longitude = location.longitude\n\nlet ngsi = {}\nngsi.payload = {\n    \"location\": {\n        \"type\": \"GeoProperty\",\n        \"value\": {\n            \"type\": \"Point\",\n            \"coordinates\": [\n                latitude, \n                longitude\n            ] \n        }               \n    },\n    \"speed\": {\n        \"type\": \"Property\", \n        \"value\": payload.speed\n    },\n    \"bearing\": {\n        \"type\": \"Property\", \n        \"value\": payload.bearing\n    },\n    \"consumption\": {\n        \"type\": \"Property\", \n        \"value\": payload.consumption\n    },\n    \"batteryLevel\": {\n        \"type\": \"Property\", \n        \"value\": payload.batteryLevel\n    }\n}\n\n/**\n * \"dateObserved\": {\n        \"type\": \"String\",\n        \"value\": dateObserved\n    },\n */\n\nmsg.payload = ngsi.payload\n\nreturn msg;",
                 "outputs": 1,
                 "timeout": "",
                 "noerr": 0,
@@ -122,12 +123,12 @@ nodered:
                 "x": 400,
                 "y": 220,
                 "wires": [
-                  [
-                    "20f7451b5b3d3ce7"
-                  ]
+                    [
+                        "20f7451b5b3d3ce7"
+                    ]
                 ]
-              },
-              {
+            },
+            {
                 "id": "66a2f70585904bd2",
                 "type": "mqtt in",
                 "z": "71259242a1777bee",
@@ -144,12 +145,13 @@ nodered:
                 "x": 170,
                 "y": 220,
                 "wires": [
-                  [
-                    "e01e2459471a3410"
-                  ]
+                    [
+                        "e01e2459471a3410",
+                        "d3d68f6b6da065e3"
+                    ]
                 ]
-              },
-              {
+            },
+            {
                 "id": "20f7451b5b3d3ce7",
                 "type": "function",
                 "z": "71259242a1777bee",
@@ -165,12 +167,12 @@ nodered:
                 "x": 680,
                 "y": 220,
                 "wires": [
-                  [
-                    "5042ce293ed5f5e3"
-                  ]
+                    [
+                        "5042ce293ed5f5e3"
+                    ]
                 ]
-              },
-              {
+            },
+            {
                 "id": "5042ce293ed5f5e3",
                 "type": "http request",
                 "z": "71259242a1777bee",
@@ -190,12 +192,12 @@ nodered:
                 "x": 950,
                 "y": 220,
                 "wires": [
-                  [
-                    "a13ace3df003c538"
-                  ]
+                    [
+                        "a13ace3df003c538"
+                    ]
                 ]
-              },
-              {
+            },
+            {
                 "id": "a13ace3df003c538",
                 "type": "debug",
                 "z": "71259242a1777bee",
@@ -212,14 +214,14 @@ nodered:
                 "x": 1100,
                 "y": 220,
                 "wires": []
-              },
-              {
+            },
+            {
                 "id": "4fb66f7f26f78dad",
                 "type": "debug",
                 "z": "71259242a1777bee",
                 "g": "41b6631a468fb594",
                 "name": "debug 8",
-                "active": true,
+                "active": false,
                 "tosidebar": true,
                 "console": false,
                 "tostatus": false,
@@ -230,8 +232,8 @@ nodered:
                 "x": 920,
                 "y": 460,
                 "wires": []
-              },
-              {
+            },
+            {
                 "id": "0eeddf3c3a228fa6",
                 "type": "http in",
                 "z": "71259242a1777bee",
@@ -244,13 +246,13 @@ nodered:
                 "x": 170,
                 "y": 360,
                 "wires": [
-                  [
-                    "33db484abea63746",
-                    "5691c2b0f7f091e9"
-                  ]
+                    [
+                        "33db484abea63746",
+                        "5691c2b0f7f091e9"
+                    ]
                 ]
-              },
-              {
+            },
+            {
                 "id": "1a845a21e2a26b13",
                 "type": "function",
                 "z": "71259242a1777bee",
@@ -266,14 +268,14 @@ nodered:
                 "x": 780,
                 "y": 360,
                 "wires": [
-                  [
-                    "1da1a364ecc4f248",
-                    "e9eb442f3ab8f313",
-                    "4fb66f7f26f78dad"
-                  ]
+                    [
+                        "1da1a364ecc4f248",
+                        "e9eb442f3ab8f313",
+                        "4fb66f7f26f78dad"
+                    ]
                 ]
-              },
-              {
+            },
+            {
                 "id": "33db484abea63746",
                 "type": "switch",
                 "z": "71259242a1777bee",
@@ -282,11 +284,11 @@ nodered:
                 "property": "payload.type",
                 "propertyType": "msg",
                 "rules": [
-                  {
-                    "t": "eq",
-                    "v": "Notification",
-                    "vt": "str"
-                  }
+                    {
+                        "t": "eq",
+                        "v": "Notification",
+                        "vt": "str"
+                    }
                 ],
                 "checkall": "true",
                 "repair": false,
@@ -294,13 +296,13 @@ nodered:
                 "x": 390,
                 "y": 360,
                 "wires": [
-                  [
-                    "c046c0934b9a89af",
-                    "485738ec6f9e9b0f"
-                  ]
+                    [
+                        "c046c0934b9a89af",
+                        "485738ec6f9e9b0f"
+                    ]
                 ]
-              },
-              {
+            },
+            {
                 "id": "c046c0934b9a89af",
                 "type": "switch",
                 "z": "71259242a1777bee",
@@ -309,11 +311,11 @@ nodered:
                 "property": "payload.payload.data",
                 "propertyType": "msg",
                 "rules": [
-                  {
-                    "t": "jsonata_exp",
-                    "v": "$count($)>0",
-                    "vt": "jsonata"
-                  }
+                    {
+                        "t": "jsonata_exp",
+                        "v": "$count($)>0",
+                        "vt": "jsonata"
+                    }
                 ],
                 "checkall": "true",
                 "repair": false,
@@ -321,13 +323,13 @@ nodered:
                 "x": 610,
                 "y": 360,
                 "wires": [
-                  [
-                    "1a845a21e2a26b13",
-                    "eebc2dfc119e6109"
-                  ]
+                    [
+                        "1a845a21e2a26b13",
+                        "eebc2dfc119e6109"
+                    ]
                 ]
-              },
-              {
+            },
+            {
                 "id": "1da1a364ecc4f248",
                 "type": "mqtt out",
                 "z": "71259242a1777bee",
@@ -345,8 +347,8 @@ nodered:
                 "x": 930,
                 "y": 360,
                 "wires": []
-              },
-              {
+            },
+            {
                 "id": "e9eb442f3ab8f313",
                 "type": "http response",
                 "z": "71259242a1777bee",
@@ -357,14 +359,14 @@ nodered:
                 "x": 940,
                 "y": 400,
                 "wires": []
-              },
-              {
+            },
+            {
                 "id": "5691c2b0f7f091e9",
                 "type": "debug",
                 "z": "71259242a1777bee",
                 "g": "41b6631a468fb594",
                 "name": "debug 9",
-                "active": true,
+                "active": false,
                 "tosidebar": true,
                 "console": false,
                 "tostatus": false,
@@ -375,14 +377,14 @@ nodered:
                 "x": 320,
                 "y": 460,
                 "wires": []
-              },
-              {
+            },
+            {
                 "id": "485738ec6f9e9b0f",
                 "type": "debug",
                 "z": "71259242a1777bee",
                 "g": "41b6631a468fb594",
                 "name": "debug 10",
-                "active": true,
+                "active": false,
                 "tosidebar": true,
                 "console": false,
                 "tostatus": false,
@@ -393,14 +395,14 @@ nodered:
                 "x": 560,
                 "y": 460,
                 "wires": []
-              },
-              {
+            },
+            {
                 "id": "eebc2dfc119e6109",
                 "type": "debug",
                 "z": "71259242a1777bee",
                 "g": "41b6631a468fb594",
                 "name": "debug 11",
-                "active": true,
+                "active": false,
                 "tosidebar": true,
                 "console": false,
                 "tostatus": false,
@@ -411,8 +413,25 @@ nodered:
                 "x": 740,
                 "y": 460,
                 "wires": []
-              },
-              {
+            },
+            {
+                "id": "d3d68f6b6da065e3",
+                "type": "debug",
+                "z": "71259242a1777bee",
+                "g": "763740da219918ee",
+                "name": "debug 12",
+                "active": true,
+                "tosidebar": true,
+                "console": false,
+                "tostatus": false,
+                "complete": "false",
+                "statusVal": "",
+                "statusType": "auto",
+                "x": 340,
+                "y": 260,
+                "wires": []
+            },
+            {
                 "id": "2cfae533763a2920",
                 "type": "mqtt-broker",
                 "name": "local",
@@ -442,13 +461,20 @@ nodered:
                 "willMsg": {},
                 "userProps": "",
                 "sessionExpiry": ""
-              }
+            }
         ]
 
 orion:
   enabled: true
   test:
     enabled: false
+  broker:
+      troe:
+          dbHost: context-broker-postgis.local.svc.cluster.local
+          dbPort: 5432
+          dbPassword: orion
+          dbUser: orion
+          enabled: true
   ingress:
     enabled: true
     hosts:
@@ -456,6 +482,54 @@ orion:
         paths:
           - /
 
+temporal:
+  enabled: true
+  additionalEnvVars:
+      - name: LOGGER_LEVELS_ROOT
+        value: TRACE
+  db:
+    host: context-broker-postgis.local.svc.cluster.local
+    port: 5432
+    password: orion
+    user: orion
+    name: orion
+  ingress:
+      enabled: true
+      hosts:
+          - host: temporal.127.0.0.1.nip.io
+            paths:
+                - /
+
+# -- configuration for the postgresql to be deployed as part of the context-broker, see https://github.com/bitnami/charts/tree/main/bitnami/postgresql for all options
+postgis:
+    global:
+        security:
+            allowInsecureImages: true
+    image:
+        registry: docker.io
+        repository: timescale/timescaledb-ha
+        tag: pg17-ts2.18
+    # -- should it be enabled? set to false if one outside the chart is used.
+    enabled: true
+    # -- overrides the generated name, provides stable service names - this should be avoided if multiple instances are available in the same namespace
+    fullnameOverride: context-broker-postgis
+    # -- overrides the generated name, provides stable service names - this should be avoided if multiple instances are available in the same namespace
+    nameOverride: context-broker-postgis
+    ## auth configuration for the database
+    auth:
+        username: orion
+        password: orion
+        database: orion
+        postgresPassword: postgres
+    ## configuration of the postgres primary replicas
+    primary:
+        ## provide db initialization
+        initdb:
+            ## provide scripts for initialization
+            scripts:
+                # -- enable the postgis extension and create the database as expected by scorpio
+                enable.sh: |
+                    psql postgresql://postgres:postgres@localhost:5432/orion -c "CREATE EXTENSION postgis;"
 
 stellio:
   global:
@@ -476,30 +550,6 @@ stellio:
       tls:
         enabled: false
 
-# -- configuration for the postgresql to be deployed as part of the context-broker, see https://github.com/bitnami/charts/tree/main/bitnami/postgresql for all options
-postgis:
-  # -- should it be enabled? set to false if one outside the chart is used.
-  enabled: false
-  # -- overrides the generated name, provides stable service names - this should be avoided if multiple instances are available in the same namespace
-  fullnameOverride: context-broker-postgis
-  # -- overrides the generated name, provides stable service names - this should be avoided if multiple instances are available in the same namespace
-  nameOverride: context-broker-postgis
-  ## auth configuration for the database
-  auth:
-    existingSecret: context-broker-secret
-    secretKeys:
-      adminPasswordKey: postgres-admin-password
-      userPasswordKey: postgres-user-password
-  ## configuration of the postgres primary replicas
-  primary:
-    ## provide db initialization
-    initdb:
-      ## provide scripts for initialization
-      scripts:
-        # -- enable the postgis extension and create the database as expected by scorpio
-        enable.sh: |
-          psql postgresql://postgres:${POSTGRES_PASSWORD}@localhost:5432 -c "CREATE EXTENSION postgis;"
-          psql postgresql://postgres:${POSTGRES_PASSWORD}@localhost:5432 -c "CREATE DATABASE ngb;"
 
 ## configuration of the context-broker - see https://github.com/FIWARE/helm-charts/tree/main/charts/scorpio-broker-aaio for details
 scorpio:

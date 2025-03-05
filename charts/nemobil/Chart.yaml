@@ -11,26 +11,21 @@ dependencies:
     repository: https://grafana.github.io/helm-charts
     version: 8.0.2
   # context-broker
-  - name: scorpio-broker-aaio
-    alias: scorpio
-    condition: scorpio.enabled
-    repository: https://fiware.github.io/helm-charts
-    version: 0.4.7
-  - name: postgresql
-    alias: postgis
-    condition: postgis.enabled
-    repository: oci://registry-1.docker.io/bitnamicharts
-    version: 13.1.5
-#  - name: stellio-context-broker
-#    alias: stellio
-#    condition: stellio.enabled
-#    repository: https://pulledtim.github.io/helm-charts
-#    version: 2.2.0
   - name: orion
     alias: orion
     condition: orion.enabled
     repository: https://fiware.github.io/helm-charts
     version: 1.5.0
+  - name: mintaka
+    alias: temporal
+    condition: temporal.enabled
+    repository: https://fiware.github.io/helm-charts
+    version: 0.4.0
+  - name: postgresql
+    alias: postgis
+    condition: postgis.enabled
+    repository: oci://registry-1.docker.io/bitnamicharts
+    version: 16.4.5
   # Mock Operational Planning
   - name: wiremock
     alias: reisewitz

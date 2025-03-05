@@ -87,3 +87,11 @@ curl -G -iX GET 'http://context-broker.127.0.0.1.nip.io:8080/ngsi-ld/v1/entities
 ### Useful links
 
 [NGSI-LD Tutorial Suite](https://github.com/FIWARE/tutorials.NGSI-LD)
+## Todos
+- Replace Subscriptions with Operator&CRDs
+- Push models to SmartDataModels and reference them
+  - generate pojos from the model's openapi to avoid working with json maps directly
+  - remove locally hosted schemas
+- Add ApiSix API Gateway to implement the intended accesscontrol
+- Move mocks to separate chart
+

@@ -29,6 +29,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
+      "id": 1,
       "links": [],
       "panels": [
         {
@@ -168,6 +169,88 @@ data:
           ],
           "title": "Fahrzeug Standort",
           "type": "geomap"
+        },
+        {
+          "datasource": {
+            "type": "ngsild-grafana-datasource",
+            "uid": "ngsild_1"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 8,
+            "y": 0
+          },
+          "id": 2,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "fields": "",
+              "reducer": [
+                "sum"
+              ],
+              "show": false
+            },
+            "showHeader": true
+          },
+          "pluginVersion": "11.0.0",
+          "targets": [
+            {
+              "attributes": [
+                "consumption",
+                "bearing"
+              ],
+              "datasource": {
+                "type": "ngsild-grafana-datasource",
+                "uid": "ngsild_1"
+              },
+              "entityType": "Vehicle",
+              "primaryNodeAttributes": {
+                "": [
+                  "consumption"
+                ]
+              },
+              "queryType": "nodegraph",
+              "refId": "A",
+              "secondaryNodeAttributes": {
+                "": [
+                  "batteryLevel"
+                ]
+              }
+            }
+          ],
+          "title": "Panel Title",
+          "type": "table"
         }
       ],
       "refresh": "10s",
@@ -180,7 +263,7 @@ data:
         "from": "now-6h",
         "to": "now"
       },
-      "timeRangeUpdatedDuringEditOrView": true,
+      "timeRangeUpdatedDuringEditOrView": false,
       "timepicker": {},
       "timezone": "browser",
       "title": "Fahrzeuge",

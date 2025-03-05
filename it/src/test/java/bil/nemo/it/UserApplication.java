@@ -1,5 +1,6 @@
 package bil.nemo.it;
 
+import bil.nemo.it.model.GeoLocation;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -22,6 +23,7 @@ public class UserApplication {
     private static final OkHttpClient HTTP_CLIENT = new OkHttpClient();
     private static final ObjectMapper OBJECT_MAPPER = new CacheSerdeableObjectMapper();
     public static final String USER_ID = "urn:ngsi-ld:User:user1";
+    public static final GeoLocation ORIGINAL_PICKUP_LOCATION = new GeoLocation(48.0, 10.0);
 
     private String lastTripRequest;
     private String lastTrip;
@@ -95,9 +97,6 @@ public class UserApplication {
     public boolean checkTripAccepted() throws IOException {
 
         HttpUrl.Builder urlBuilder = HttpUrl.parse(LocalSetupEnvironment.BROKER_ADDRESS + "/ngsi-ld/v1/entities/"+lastTrip).newBuilder();
-        //urlBuilder.addQueryParameter("type", "Trip");
-        // FIXME: Searching for all trips of the user and not directly for the trip with the id since the query didn't work properly. Should be fixed to avoid going thru the list
-        //urlBuilder.addQueryParameter("q", "user=='%s'".formatted(USER_ID));
 
         String url = urlBuilder.build().toString();
 
