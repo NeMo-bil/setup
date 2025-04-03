@@ -2,6 +2,7 @@ grafana:
   enabled: true
 
 postgis:
+  enabled: false
   global:
     defaultStorageClass: local-path
   namespaceOverride: local
@@ -36,6 +37,10 @@ mqtt:
           paths:
             - # -- Path.  Helm template can be passed.
               path: /
+orion:
+  enabled: false
+temporal:
+  enabled: false
 
 scorpio:
   logging:
@@ -157,7 +162,7 @@ reisewitz:
                 "Content-Type": "application/json",
                 "Link": "<http://context-file:9000/context-file/ngsild-context.jsonld>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\""
               },
-              "body": "{{jsonPath originalRequest.body '$.data[0].pickupLocation'}}"
+              "body": "{\"type\":\"GeoProperty\",\"value\":{{jsonPath originalRequest.body '$.data[0].pickupLocation'}} }"
             }
           }
         ]
@@ -170,6 +175,7 @@ rw-request-subscription:
       "description": "Notify me of trip requests",
       "type": "Subscription",
       "entities": [{"type": "TripRequest"}],
+      "notificationTrigger": ["entityCreated"],
       "notification": {
         "attributes": ["user", "startLocation", "targetLocation"],
         "format": "keyValues",
@@ -189,6 +195,7 @@ rw-trip-subscription:
       "type": "Subscription",
       "entities": [{"type": "Trip"}],
       "watchedAttributes": ["status"],
+      "notificationTrigger": ["entityCreated","entityUpdated","attributeCreated","attributeUpdated"],
       "q": "status==%22Unplanned%22",
       "notification": {
         "attributes": ["user"],
@@ -210,6 +217,7 @@ rw-trip-plan-subscription:
       "type": "Subscription",
       "entities": [{"type": "Trip"}],
       "watchedAttributes": ["status"],
+      "notificationTrigger": ["attributeUpdated"],
       "q": "status==%22Planned%22",
       "notification": {
         "attributes": ["pickupLocation","status"],

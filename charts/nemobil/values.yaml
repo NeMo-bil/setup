@@ -465,7 +465,7 @@ nodered:
         ]
 
 orion:
-  enabled: true
+  enabled: false
   test:
     enabled: false
   broker:
@@ -483,7 +483,7 @@ orion:
           - /
 
 temporal:
-  enabled: true
+  enabled: false
   additionalEnvVars:
       - name: LOGGER_LEVELS_ROOT
         value: TRACE
@@ -499,6 +499,26 @@ temporal:
           - host: temporal.127.0.0.1.nip.io
             paths:
                 - /
+payment:
+    enabled: true
+    applicationName: payment
+    deployment:
+        image:
+            repository: quay.io/pulledtim/payment
+            tag: latest
+        startupProbe:
+            enabled: true
+            httpGet:
+                path: '/health'
+                port: 8080
+        livenessProbe:
+            enabled: true
+            httpGet:
+                path: '/health'
+                port: 8080
+        env:
+            BROKER:
+                value: context-broker.127.0.0.1.nip.io
 
 # -- configuration for the postgresql to be deployed as part of the context-broker, see https://github.com/bitnami/charts/tree/main/bitnami/postgresql for all options
 postgis:
@@ -510,7 +530,7 @@ postgis:
         repository: timescale/timescaledb-ha
         tag: pg17-ts2.18
     # -- should it be enabled? set to false if one outside the chart is used.
-    enabled: true
+    enabled: false
     # -- overrides the generated name, provides stable service names - this should be avoided if multiple instances are available in the same namespace
     fullnameOverride: context-broker-postgis
     # -- overrides the generated name, provides stable service names - this should be avoided if multiple instances are available in the same namespace
@@ -535,7 +555,8 @@ stellio:
   global:
     fallbackDefaults:
       storageClass: local-path
-  enabled: false
+      pvcSize: 1Gi
+  enabled: true
   kafka:
     persistence:
       storageClass: "local-path"
@@ -543,9 +564,17 @@ stellio:
     persistence:
       storageClass: "local-path"
       size: 5Gi
+  subscription:
+    image:
+      tag: tim
+  search:
+    image:
+      tag: 2.21.1
   api_gateway:
+    image:
+      tag: 2.21.1
     ingress:
-      enabled: false
+      enabled: true
       host: context-broker.127.0.0.1.nip.io
       tls:
         enabled: false
@@ -685,6 +714,10 @@ contextFile:
   context: |
     {
           "@context": {
+              "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
+              "geojson": "https://purl.org/geojson/vocab#",
+              "Point": "geojson:Point",
+              "GeoProperty": "ngsi-ld:GeoProperty",
               "TripRequest": "https://raw.githubusercontent.com/NeMo-bil/model/refs/heads/Vehicle/docs/TripRequest/schema.json",
               "startLocation":  "https://raw.githubusercontent.com/NeMo-bil/model/refs/heads/Vehicle/docs/TripRequest/schema.json#startLocation",
               "targetLocation": "https://raw.githubusercontent.com/NeMo-bil/model/refs/heads/Vehicle/docs/TripRequest/schema.json#targetLocation",

@@ -51,7 +51,7 @@ public class UserApplication {
 
         HttpUrl.Builder urlBuilder = HttpUrl.parse(LocalSetupEnvironment.BROKER_ADDRESS + "/ngsi-ld/v1/entities").newBuilder();
         urlBuilder.addQueryParameter("type", "TripProposal");
-        urlBuilder.addQueryParameter("q", "request==\"%s\"".formatted(lastTripRequest));
+        urlBuilder.addQueryParameter("q", "request==%s".formatted(lastTripRequest));
 
         String url = urlBuilder.build().toString();
 

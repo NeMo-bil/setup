@@ -11,6 +11,11 @@ dependencies:
     repository: https://grafana.github.io/helm-charts
     version: 8.0.2
   # context-broker
+  - name: stellio-context-broker
+    alias: stellio
+    condition: stellio.enabled
+    repository: https://pulledtim.github.io/helm-charts
+    version: 2.2.0
   - name: orion
     alias: orion
     condition: orion.enabled
@@ -64,4 +69,10 @@ dependencies:
     repository: oci://ghcr.io/schwarzit/charts
     version: 0.33.0
     condition: node-red.enabled
+  # Payment
+  - name: application
+    alias: payment
+    repository: https://stakater.github.io/stakater-charts
+    version: 6.0.2
+    condition: payment.enabled
 
